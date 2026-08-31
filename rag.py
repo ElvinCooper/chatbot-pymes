@@ -1,26 +1,70 @@
 """
 Módulo de RAG (Retrieval-Augmented Generation) para el chatbot.
 
-Usa ChromaDB con su función de embeddings local por defecto (MiniLM vía ONNX),
-así que no necesita ninguna API key ni conexión externa para generar los
-embeddings: todo corre en tu propio servidor, gratis.
+Usa ChromaDB con una función de embeddings local multilingüe (MiniLM-L12 vía
+ONNX), así que no necesita ninguna API key ni conexión externa para generar los
+embeddings (a excepción de la primera descarga del modelo): todo corre en tu
+propio servidor, gratis.
 
 Soporta ingesta de archivos .txt y .pdf.
 """
 
+import logging
 import uuid
 from pathlib import Path
 
 import chromadb
 from pypdf import PdfReader
 
+from embeddings import MultilingualE5
+
+logger = logging.getLogger("chatbot.rag")
+
 CHROMA_PATH = "./chroma_db"
 COLLECTION_NAME = "business_docs"
-CHUNK_SIZE = 800
+CHUNK_SIZE = 600
 CHUNK_OVERLAP = 100
 
 _client = chromadb.PersistentClient(path=CHROMA_PATH)
-_collection = _client.get_or_create_collection(COLLECTION_NAME)
+_embedding_function = MultilingualE5()
+COLLECTION_METADATA = {
+    "hnsw:space": "cosine",
+    "embedding_model": MultilingualE5.name(),
+}
+
+
+def _get_collection():
+    """Crea o reabre la colección. Si ya existía con otro modelo de embeddings o
+    con un espacio de distancia distinto del coseno, la recrea para evitar
+    vectores incompatibles y ranking incorrecto."""
+    try:
+        existing = _client.get_collection(
+            COLLECTION_NAME, embedding_function=_embedding_function
+        )
+        metadata = existing.metadata or {}
+        if metadata.get("hnsw:space") != "cosine":
+            raise ValueError("la colección usa un espacio de distancia distinto de coseno")
+        if metadata.get("embedding_model") != COLLECTION_METADATA["embedding_model"]:
+            raise ValueError("la colección usa otro modelo de embeddings")
+        return existing
+    except Exception:
+        logger.warning(
+            "Colección '%s' incompatible con el modelo de embeddings/espacio actual. "
+            "Se recrea; los documentos habrá que volver a indexarlos.",
+            COLLECTION_NAME,
+        )
+        try:
+            _client.delete_collection(COLLECTION_NAME)
+        except Exception:
+            pass
+        return _client.create_collection(
+            COLLECTION_NAME,
+            embedding_function=_embedding_function,
+            metadata=COLLECTION_METADATA,
+        )
+
+
+_collection = _get_collection()
 
 
 def extract_text(file_path: str) -> str:
@@ -64,7 +108,7 @@ def ingest_document(file_path: str, source_name: str) -> int:
     return len(chunks)
 
 
-def retrieve_context(query: str, n_results: int = 4) -> str:
+def retrieve_context(query: str, n_results: int = 5) -> str:
     """Busca los fragmentos más relevantes para la pregunta del usuario."""
     if _collection.count() == 0:
         return ""

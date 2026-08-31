@@ -1,0 +1,11 @@
+# Entorno y secretos
+.env
+.venv/
+__pycache__/
+
+# Base de datos vectorial local (regenerable desde los documentos)
+chroma_db/
+
+# Misc
+*.pyc
+.DS_Store
