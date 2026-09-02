@@ -18,7 +18,7 @@ import tempfile
 from dataclasses import dataclass
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, Header, UploadFile, File
 from openai import AsyncOpenAI, APIError, APITimeoutError, RateLimitError
 from pydantic import BaseModel
 
@@ -31,6 +31,20 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("chatbot")
 
 app = FastAPI(title="SMB Chatbot Assistant")
+
+# Configuración de seguridad del webhook (no hardcodeada, viene de .env).
+TELEGRAM_WEBHOOK_SECRET = os.getenv("TELEGRAM_WEBHOOK_SECRET") or ""
+WEBHOOK_SECRET_HEADER = "X-Telegram-Bot-Api-Secret-Token"
+
+
+def verify_webhook_secret(x_telegram_bot_api_secret_token: str | None = None) -> None:
+    """Valida el origen del webhook. Si hay un secret configurado, exige que la
+    cabecera coincida; si no, responde 401 (evita usar /webhooks/telegram como
+    proxy hacia /chat)."""
+    if not TELEGRAM_WEBHOOK_SECRET:
+        return
+    if x_telegram_bot_api_secret_token != TELEGRAM_WEBHOOK_SECRET:
+        raise HTTPException(status_code=401, detail="Secret de webhook inválido")
 
 
 @dataclass
@@ -183,7 +197,12 @@ async def health() -> dict:
 
 
 @app.post("/webhooks/telegram")
-async def telegram_webhook(update: dict) -> dict:
+async def telegram_webhook(
+    update: dict,
+    x_telegram_bot_api_secret_token: str | None = Header(default=None),
+) -> dict:
+    verify_webhook_secret(x_telegram_bot_api_secret_token)
+
     chat_id = telegram_adapter.get_chat_id(update)
     message = telegram_adapter.parse_message(update)
 
