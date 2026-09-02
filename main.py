@@ -23,6 +23,7 @@ from openai import AsyncOpenAI, APIError, APITimeoutError, RateLimitError
 from pydantic import BaseModel
 
 import rag
+import telegram_adapter
 
 load_dotenv()
 
@@ -179,3 +180,22 @@ async def health() -> dict:
         "providers_configured": configured,
         "documents_indexed": len(rag.list_sources()),
     }
+
+
+@app.post("/telegram/webhook")
+async def telegram_webhook(update: dict) -> dict:
+    chat_id = telegram_adapter.get_chat_id(update)
+    message = telegram_adapter.parse_message(update)
+
+    if chat_id is None or message is None:
+        logger.info("Update de Telegram ignorado (sin chat_id o sin texto)")
+        return {"status": "ok", "ignored": True}
+
+    request = ChatRequest(
+        message=message,
+        conversation_id=telegram_adapter.build_conversation_id(chat_id),
+    )
+    response = await chat(request)
+
+    await telegram_adapter.send_message(chat_id, response.reply)
+    return {"status": "ok"}
