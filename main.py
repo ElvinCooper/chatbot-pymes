@@ -182,7 +182,7 @@ async def health() -> dict:
     }
 
 
-@app.post("/telegram/webhook")
+@app.post("/webhooks/telegram")
 async def telegram_webhook(update: dict) -> dict:
     chat_id = telegram_adapter.get_chat_id(update)
     message = telegram_adapter.parse_message(update)
