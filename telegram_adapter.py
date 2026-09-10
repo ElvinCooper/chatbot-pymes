@@ -12,6 +12,7 @@ webhook en main.py.
 
 import logging
 import os
+import re
 
 import httpx
 
@@ -19,7 +20,6 @@ logger = logging.getLogger("chatbot.telegram")
 
 CHANNEL_NAME = "telegram"
 TELEGRAM_API = "https://api.telegram.org"
-BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 
 def build_conversation_id(chat_id: int) -> str:
@@ -51,10 +51,27 @@ def get_chat_id(update: dict) -> int | None:
 
 async def send_message(chat_id: int, text: str) -> None:
     """Envía un mensaje al chat de Telegram mediante la Bot API."""
-    if not BOT_TOKEN:
+    bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    if not bot_token:
         logger.warning("No se configuró TELEGRAM_BOT_TOKEN; no se puede responder.")
         return
-    url = f"{TELEGRAM_API}/bot{BOT_TOKEN}/sendMessage"
+    url = f"{TELEGRAM_API}/bot{bot_token}/sendMessage"
+    formatted = _format_for_telegram(text)
     async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.post(url, json={
+            "chat_id": chat_id,
+            "text": formatted,
+            "parse_mode": "Markdown",
+        })
+        if resp.status_code == 200:
+            return
+        logger.warning("Markdown falló (%s), reenvío sin formato", resp.status_code)
         resp = await client.post(url, json={"chat_id": chat_id, "text": text})
         resp.raise_for_status()
+
+
+def _format_for_telegram(text: str) -> str:
+    """Convierte Markdown estándar del LLM al formato Telegram Markdown."""
+    text = re.sub(r'\*\*(.+?)\*\*', r'*\1*', text)
+    text = re.sub(r'^(\s*)- ', r'\1• ', text, flags=re.MULTILINE)
+    return text
