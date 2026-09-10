@@ -6,6 +6,9 @@ __pycache__/
 # Base de datos vectorial local (regenerable desde los documentos)
 chroma_db/
 
+# Logs y pids de run_bot.sh
+logs/
+
 # Misc
 *.pyc
 .DS_Store
