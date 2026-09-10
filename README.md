@@ -41,11 +41,13 @@ Primera ejecución: al indexar o buscar, se descargará el modelo de embeddings
 
 ## Configuración (`.env`)
 
-| Variable            | Proveedor                                        | Cómo obtener la key                    |
-| ------------------- | ------------------------------------------------ | -------------------------------------- |
-| `GROQ_API_KEY`      | Groq (rápido y gratuito, recomendado)            | https://console.groq.com/keys          |
-| `OPENROUTER_API_KEY`| OpenRouter (muchos modelos, incl. gratis)        | https://openrouter.ai/settings/keys    |
-| `GEMINI_API_KEY`    | Google Gemini                                    | https://aistudio.google.com/apikey     |
+| Variable                | Proveedor/Canal                                | Cómo obtener la key                    |
+| ----------------------- | ---------------------------------------------- | -------------------------------------- |
+| `GROQ_API_KEY`          | Groq (rápido y gratuito, recomendado)          | https://console.groq.com/keys          |
+| `OPENROUTER_API_KEY`    | OpenRouter (muchos modelos, incl. gratis)      | https://openrouter.ai/settings/keys    |
+| `GEMINI_API_KEY`        | Google Gemini                                  | https://aistudio.google.com/apikey     |
+| `TELEGRAM_BOT_TOKEN`    | Bot para hablar desde Telegram                 | @BotFather (`/newbot`)                 |
+| `TELEGRAM_WEBHOOK_SECRET`| Secreto para validar el webhook de Telegram   | Generar uno (o `run_bot.sh` lo crea)   |
 
 Los proveedores sin key se ignoran automáticamente. Con una sola key el chat
 funciona; con varias, si el primero falla se pasa al siguiente.
@@ -76,6 +78,7 @@ para probar. El contenido que indexes será lo único que el chatbot conozca.
 | GET    | `/documents`                  | Lista los documentos indexados                 |
 | DELETE | `/documents/{source_name}`    | Elimina un documento del índice                |
 | GET    | `/health`                     | Estado del servidor, providers y documentos    |
+| POST   | `/webhooks/telegram`          | Webhook que recibe los mensajes de Telegram    |
 
 Ejemplo de chat:
 
@@ -87,13 +90,48 @@ curl -X POST http://127.0.0.1:8000/chat \
 
 La respuesta incluye el `provider` y el `model` usados, y si se usó contexto RAG.
 
+El campo opcional `conversation_id` activa memoria de la conversación (últimos
+mensajes del hilo): el bot evita repetir datos que ya dio antes (p. ej. el
+contacto) y solo los retoma si el usuario los pide o se despide. Sin ese campo,
+cada pregunta es independiente.
+
+## Bot de Telegram
+
+Para hablarle al chatbot desde tu celular, sin dominio ni configuración manual:
+
+```bash
+# Requisitos
+# 1. Crea el bot con @BotFather y pon el token en .env: TELEGRAM_BOT_TOKEN
+# 2. Instala cloudflared: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
+#    (o descárgalo como ./cloudflared)
+
+# Levanta uvicorn + un túnel HTTPS de Cloudflare y registra el webhook
+./run_bot.sh start
+
+# Detener
+./run_bot.sh stop
+
+# Re-registrar el webhook si cambió la URL del túnel (por un reinicio)
+./run_bot.sh webhook
+```
+
+`run_bot.sh` genera `TELEGRAM_WEBHOOK_SECRET` automáticamente si no existe y lo
+guarda en `.env`. Abre tu bot en Telegram, pulsa *Start* y escribe.
+
+> La URL gratuita de `trycloudflare.com` cambia en cada reinicio del túnel;
+> vuelve a ejecutar `./run_bot.sh webhook` (o `start`) para re-registrarla.
+> La memoria de conversaciones es en memoria: un reinicio del servidor equivale
+> a una sesión nueva.
+
 ## Estructura
 
 ```
-main.py          # API FastAPI: chat, subida/gestión de documentos, health
-rag.py           # Ingesta (troceado), indexado y recuperación en ChromaDB
-embeddings.py    # Embedding function multilingüe (E5-small en ONNX)
-data/            # Documentos del negocio (fuente de información)
+main.py               # API FastAPI: chat, subida/gestión de documentos, health, webhook
+rag.py                # Ingesta (troceado), indexado y recuperación en ChromaDB
+embeddings.py         # Embedding function multilingüe (E5-small en ONNX)
+telegram_adapter.py   # Helpers de la Bot API de Telegram (webhook, formato Markdown)
+run_bot.sh            # Levanta uvicorn + túnel Cloudflare y registra el webhook
+data/                 # Documentos del negocio (fuente de información)
 ```
 
 ## Limitaciones conocidas
