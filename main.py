@@ -12,18 +12,22 @@ Variables de entorno (ver .env.example):
     GEMINI_API_KEY
 """
 
+import hmac
+import json
 import logging
 import os
 import tempfile
 from dataclasses import dataclass
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Header, UploadFile, File
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Header, Query, Request, UploadFile, File
+from fastapi.responses import PlainTextResponse
 from openai import AsyncOpenAI, APIError, APITimeoutError, RateLimitError
 from pydantic import BaseModel
 
 import rag
 import telegram_adapter
+import whatsapp_adapter
 
 load_dotenv()
 
@@ -35,6 +39,12 @@ app = FastAPI(title="SMB Chatbot Assistant")
 # Configuración de seguridad del webhook (no hardcodeada, viene de .env).
 TELEGRAM_WEBHOOK_SECRET = os.getenv("TELEGRAM_WEBHOOK_SECRET") or ""
 WEBHOOK_SECRET_HEADER = "X-Telegram-Bot-Api-Secret-Token"
+
+# WhatsApp Business Cloud API (Meta). El verify_token es el que se pega en el
+# panel de Meta (distinto del App Secret) y el App Secret valida la firma de
+# los updates. Vacíos = canal deshabilitado / validación opcional.
+WHATSAPP_VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN") or ""
+WHATSAPP_APP_SECRET = os.getenv("WHATSAPP_APP_SECRET") or ""
 
 
 def verify_webhook_secret(x_telegram_bot_api_secret_token: str | None = None) -> None:
@@ -117,6 +127,11 @@ def build_system_prompt(context: str) -> str:
 # equivale a una sesión nueva).
 CONV_HISTORY_LIMIT = 8
 _conv_histories: dict[str, list[dict]] = {}
+
+# Deduplicación de updates de WhatsApp: Meta reintenta los envíos fallidos, así
+# que un mismo wamid puede llegar más de una vez.
+_RECENT_WAMIDS_LIMIT = 200
+_recent_wamids: set[str] = set()
 
 
 def _append_history(conversation_id: str | None, messages: list[dict]) -> None:
@@ -217,6 +232,10 @@ async def health() -> dict:
         "status": "ok",
         "providers_configured": configured,
         "documents_indexed": len(rag.list_sources()),
+        "channels": {
+            "telegram": bool(os.getenv("TELEGRAM_BOT_TOKEN")),
+            "whatsapp": bool(os.getenv("WHATSAPP_ACCESS_TOKEN")) and bool(os.getenv("WHATSAPP_PHONE_NUMBER_ID")),
+        },
     }
 
 
@@ -242,3 +261,65 @@ async def telegram_webhook(
 
     await telegram_adapter.send_message(chat_id, response.reply)
     return {"status": "ok"}
+
+
+@app.get("/webhooks/whatsapp")
+async def whatsapp_webhook_verify(
+    hub_mode: str | None = Query(default=None, alias="hub.mode"),
+    hub_verify_token: str | None = Query(default=None, alias="hub.verify_token"),
+    hub_challenge: str | None = Query(default=None, alias="hub.challenge"),
+) -> PlainTextResponse:
+    """Handshake de verificación de Meta. Debe responder con el challenge
+    CRUDO (texto plano, no JSON) si el verify_token coincide."""
+    if not WHATSAPP_VERIFY_TOKEN:
+        raise HTTPException(status_code=503, detail="WHATSAPP_VERIFY_TOKEN no configurado")
+    if hub_mode == "subscribe" and hmac.compare_digest(
+        hub_verify_token or "", WHATSAPP_VERIFY_TOKEN
+    ):
+        return PlainTextResponse(hub_challenge or "")
+    raise HTTPException(status_code=403, detail="Verify token inválido")
+
+
+@app.post("/webhooks/whatsapp")
+async def whatsapp_webhook(request: Request, background_tasks: BackgroundTasks) -> dict:
+    """Recibe los events de WhatsApp. Lee el body crudo para validar la firma
+    y procesa la conversación en background para responder 200 rápido (Meta
+    reintenta si tarda o falla)."""
+    if not WHATSAPP_VERIFY_TOKEN:
+        raise HTTPException(status_code=503, detail="WHATSAPP_VERIFY_TOKEN no configurado")
+
+    raw_body = await request.body()
+
+    if WHATSAPP_APP_SECRET:
+        signature = request.headers.get("X-Hub-Signature-256")
+        if not whatsapp_adapter.verify_signature(raw_body, signature, WHATSAPP_APP_SECRET):
+            raise HTTPException(status_code=401, detail="Firma de webhook inválida")
+    try:
+        update = json.loads(raw_body)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Body inválido")
+
+    for wamid, wa_id, message in whatsapp_adapter.parse_messages(update):
+        if wamid in _recent_wamids:
+            logger.info("Update de WhatsApp duplicado ignorado (wamid %s)", wamid)
+            continue
+        _recent_wamids.add(wamid)
+        if len(_recent_wamids) > _RECENT_WAMIDS_LIMIT:
+            _recent_wamids.clear()
+        background_tasks.add_task(_handle_whatsapp_message, wamid, wa_id, message)
+
+    return {"status": "ok"}
+
+
+async def _handle_whatsapp_message(wamid: str, wa_id: str, message: str) -> None:
+    """Procesa un mensaje de WhatsApp: llama a /chat y devuelve la respuesta."""
+    request = ChatRequest(
+        message=message,
+        conversation_id=whatsapp_adapter.build_conversation_id(wa_id),
+    )
+    try:
+        response = await chat(request)
+    except HTTPException as exc:
+        logger.error("Error al responder por WhatsApp (wamid %s): %s", wamid, exc.detail)
+        return
+    await whatsapp_adapter.send_message(wa_id, response.reply)

@@ -79,6 +79,8 @@ para probar. El contenido que indexes será lo único que el chatbot conozca.
 | DELETE | `/documents/{source_name}`    | Elimina un documento del índice                |
 | GET    | `/health`                     | Estado del servidor, providers y documentos    |
 | POST   | `/webhooks/telegram`          | Webhook que recibe los mensajes de Telegram    |
+| GET    | `/webhooks/whatsapp`          | Verificación del webhook de WhatsApp (Meta)    |
+| POST   | `/webhooks/whatsapp`          | Webhook que recibe los mensajes de WhatsApp    |
 
 Ejemplo de chat:
 
@@ -123,14 +125,62 @@ guarda en `.env`. Abre tu bot en Telegram, pulsa *Start* y escribe.
 > La memoria de conversaciones es en memoria: un reinicio del servidor equivale
 > a una sesión nueva.
 
+## WhatsApp Business (Cloud API de Meta)
+
+Conecta el chatbot a tu número de WhatsApp del negocio usando la Cloud API de
+Meta. Como no tienes dominio aún, `run_whatsapp.sh` abre un túnel HTTPS de
+Cloudflare (misma idea que Telegram) y te imprime la URL para el panel.
+
+Requisitos en [developers.facebook.com](https://developers.facebook.com/):
+
+- App creada y enlazada a un número de WhatsApp Business (WhatsApp > API Setup).
+- `WHATSAPP_PHONE_NUMBER_ID` — id del número del negocio.
+- `WHATSAPP_ACCESS_TOKEN` — token temporal (24 h) del panel, o mejor uno
+  **permanente** de system user (Empresa >  Configuración de la empresa >
+  Usuarios del sistema) con permiso `whatsapp_business_messaging`.
+- `WHATSAPP_APP_SECRET` — App Settings > Basic (para validar la firma).
+- `WHATSAPP_VERIFY_TOKEN` — una cadena cualquiera que elijas.
+- `cloudflared` instalado (ver sección de Telegram).
+
+Configuración:
+
+```bash
+# 1. Completa las 4 variables WHATSAPP_* en .env
+# 2. Levanta servidor + túnel (puerto 8001, no choca con el de Telegram)
+./run_whatsapp.sh start
+```
+
+El script imprime la URL pública. Después, en el panel de Meta:
+
+1. Tu app → WhatsApp → Configuration → Webhook.
+2. Callback URL: `https://<túnel>.trycloudflare.com/webhooks/whatsapp`
+3. Verify token: el valor de `WHATSAPP_VERIFY_TOKEN`.
+4. Pulsa *Verify and save* (el servidor responde al handshake de verificación).
+5. En *Webhook fields*, suscríbete a `messages` (sin esto no llega nada).
+
+Listo: escribe al número del negocio desde tu teléfono y el chatbot responde.
+
+> **Ventana de 24 h**: la Cloud API solo permite mensajes de texto libre como
+> respuesta dentro de las 24 h posteriores a un mensaje del cliente. Fuera de
+> esa ventana hace falta una plantilla aprobada por Meta.
+>
+> **Token temporal**: caduca en ~24 h; si respondes 401 al enviar, regenera el
+> token en el panel o crea uno permanente de system user.
+>
+> **URL del túnel**: la URL gratuita de `trycloudflare.com` cambia en cada
+> reinicio; si reinicias, vuelve a ejecutar `./run_whatsapp.sh start` y repite
+> el paso 2 con la nueva URL.
+
 ## Estructura
 
 ```
-main.py               # API FastAPI: chat, subida/gestión de documentos, health, webhook
+main.py               # API FastAPI: chat, subida/gestión de documentos, health, webhooks
 rag.py                # Ingesta (troceado), indexado y recuperación en ChromaDB
 embeddings.py         # Embedding function multilingüe (E5-small en ONNX)
 telegram_adapter.py   # Helpers de la Bot API de Telegram (webhook, formato Markdown)
-run_bot.sh            # Levanta uvicorn + túnel Cloudflare y registra el webhook
+whatsapp_adapter.py   # Helpers de la Cloud API de WhatsApp/Meta (firma, mensajes)
+run_bot.sh            # Levanta uvicorn + túnel Cloudflare y registra el webhook de Telegram
+run_whatsapp.sh       # Levanta uvicorn + túnel Cloudflare (webhook de WhatsApp se pega en Meta)
 data/                 # Documentos del negocio (fuente de información)
 ```
 

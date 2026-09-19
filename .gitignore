@@ -12,3 +12,5 @@ logs/
 # Misc
 *.pyc
 .DS_Store
+# Archivo huérfano con secretos (accidente); NUNCA commitear
+.enves
