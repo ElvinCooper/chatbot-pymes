@@ -22,6 +22,14 @@ PAGOS: Aceptamos efectivo, tarjetas de débito y crédito (Visa, Mastercard), y 
 
 PEDIDOS Y ENCARGOS:
 - Se aceptan pedidos especiales (pasteles, torras y cotillones) con un mínimo de 48 horas de anticipación.
+
+COTILLONES: Un cotillón es un paquete de fiesta para cumpleaños y celebraciones que incluye elementos
+decorativos y festivos (gorros de cumpleaños, matracas, silbatos, serpentinas, bolsitas de dulces, velas
+numeradas, globos, piqueras y platillos de sorbetes o dulces típicos). Ofrecemos dos tamaños:
+- Cotillón básico: gorros, matracas, serpentinas y bolsitas de dulces (ideal para mesas pequeñas).
+- Cotillón premium: incluye todo lo del básico más globos con helio, velas numeradas, piquera y banderines.
+Los pedidos de cotillones se solicitan con 48 horas de anticipación (misma política que los demás pedidos
+especiales) y el precio varía según el tamaño y la cantidad de invitados.
 - Para cotizaciones grandes (más de 50 unidades) se ofrece un 10% de descuento.
 
 PRECIOS:

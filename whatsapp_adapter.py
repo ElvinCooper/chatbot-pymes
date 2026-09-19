@@ -93,7 +93,7 @@ def _format_for_whatsapp(text: str) -> str:
 
     WhatsApp usa *bold* (no **), _italica_, ~tachado~ y ```codigo```.
     """
-    text = re.sub(r"\*\*(.+?)\*\*", r"*\1*", text)
+    text = re.sub(r"\*\*(.+?)\*\*", r"\1", text, flags=re.DOTALL)
     text = re.sub(r"^(\s*)- ", r"\1• ", text, flags=re.MULTILINE)
     return text
 
