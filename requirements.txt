@@ -1,6 +1,7 @@
 fastapi
 uvicorn[standard]
 openai
+httpx
 python-dotenv
 python-multipart
 chromadb

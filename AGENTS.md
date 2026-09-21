@@ -17,11 +17,12 @@ Flat Python project, no packages. All source files are in the root:
 
 | File | Role |
 |---|---|
-| `main.py` | FastAPI app: `/chat`, `/documents/*`, `/health`, `/webhooks/telegram`, `/webhooks/whatsapp` |
+| `main.py` | FastAPI app: `/chat`, `/documents/*`, `/health`, `/webhooks/telegram`, `/webhooks/whatsapp`. `/documents/quote` delega en `document_service.py` |
 | `rag.py` | ChromaDB ingestion (chunking, indexing) and retrieval |
 | `embeddings.py` | Local multilingual E5-small via ONNX (no API key needed) |
 | `telegram_adapter.py` | Telegram Bot API helpers (parse updates, send messages) |
 | `whatsapp_adapter.py` | WhatsApp Cloud API helpers (signature check, parse/send) |
+| `document_service.py` | Client for the external document-service (`POST /quotes` → PDF) |
 
 ## Key gotchas
 

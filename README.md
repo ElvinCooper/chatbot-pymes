@@ -77,6 +77,7 @@ para probar. El contenido que indexes será lo único que el chatbot conozca.
 | POST   | `/documents/upload`           | Sube e indexa un `.txt` o `.pdf`               |
 | GET    | `/documents`                  | Lista los documentos indexados                 |
 | DELETE | `/documents/{source_name}`    | Elimina un documento del índice                |
+| POST   | `/documents/quote`            | Genera una cotización PDF vía document-service |
 | GET    | `/health`                     | Estado del servidor, providers y documentos    |
 | POST   | `/webhooks/telegram`          | Webhook que recibe los mensajes de Telegram    |
 | GET    | `/webhooks/whatsapp`          | Verificación del webhook de WhatsApp (Meta)    |
@@ -96,6 +97,26 @@ El campo opcional `conversation_id` activa memoria de la conversación (últimos
 mensajes del hilo): el bot evita repetir datos que ya dio antes (p. ej. el
 contacto) y solo los retoma si el usuario los pide o se despide. Sin ese campo,
 cada pregunta es independiente.
+
+### Generar una cotización (PDF)
+
+`/documents/quote` delega en el microservicio `document-service` (requiere
+`DOCUMENT_SERVICE_URL` e `INTERNAL_API_KEY` configurados):
+
+```bash
+curl -X POST http://127.0.0.1:8000/documents/quote \
+  -H "Content-Type: application/json" \
+  -d '{
+    "request_id": "req-001",
+    "tenant_id": "pymes",
+    "customer": {"name": "Juan Pérez", "phone": "809-555-0101"},
+    "items": [{"description": "Consulta legal", "quantity": 1, "unit_price": 2500.0}],
+    "currency": "DOP"
+  }'
+```
+
+Devuelve `{document_id, quote_number, pdf_url, size_bytes, status}`. Si el
+document-service no está disponible o rechaza la petición, responde `502`.
 
 ## Bot de Telegram
 

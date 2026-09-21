@@ -12,11 +12,13 @@ Variables de entorno (ver .env.example):
     GEMINI_API_KEY
 """
 
+import asyncio
 import hmac
 import json
 import logging
 import os
 import tempfile
+import time
 from dataclasses import dataclass
 
 from dotenv import load_dotenv
@@ -28,6 +30,7 @@ from pydantic import BaseModel
 import rag
 import telegram_adapter
 import whatsapp_adapter
+import document_service
 
 load_dotenv()
 
@@ -116,6 +119,23 @@ class ChatResponse(BaseModel):
     used_context: bool
 
 
+class QuoteRequest(BaseModel):
+    """Payload para generar una cotización PDF en el document-service."""
+    request_id: str
+    tenant_id: str
+    customer: dict
+    items: list[dict]
+    currency: str = "DOP"
+
+
+class QuoteResponse(BaseModel):
+    document_id: str
+    quote_number: str
+    pdf_url: str
+    size_bytes: int
+    status: str
+
+
 def build_system_prompt(context: str) -> str:
     if not context:
         return BASE_SYSTEM_PROMPT
@@ -127,6 +147,30 @@ def build_system_prompt(context: str) -> str:
 # equivale a una sesión nueva).
 CONV_HISTORY_LIMIT = 8
 _conv_histories: dict[str, list[dict]] = {}
+
+# --- Cierre automático por inactividad (Flujo de Cierre, 2 etapas) ----------
+# Tras el último mensaje del usuario:
+#   1er aviso (cortesía) a los IDLE_NAG_SECONDS  (3 min) — llama la atención
+#   cierre  automático     a los IDLE_CLOSE_SECONDS (5 min = 3+2) — despedida +
+#   limpieza del contexto para la próxima sesión.
+IDLE_NAG_SECONDS = 180   # 3:00
+IDLE_CLOSE_SECONDS = 300 # 5:00
+IDLE_CHECK_INTERVAL = 20 # cada cuánto revisa el monitor (s)
+
+# conversation_id -> timestamp (epoch) del último mensaje del usuario.
+_idle_last_activity: dict[str, float] = {}
+# conversation_id -> wamid/chat_id del canal para responder (wa_id o chat_id).
+_idle_target_hint: dict[str, str] = {}
+
+CLOSE_COURTESY_MSG = (
+    "Hola, ¿sigues ahí? Cuéntame si necesitas algo más o si podemos dar por "
+    "terminada nuestra sesión."
+)
+CLOSE_FINAL_MSG = (
+    "Como no he tenido respuesta, daré por cerrada esta conversación para "
+    "mantener tus datos seguros. Si me necesitas de nuevo, solo escribe un "
+    "mensaje. ¡Que tengas un buen día!"
+)
 
 # Deduplicación de updates de WhatsApp: Meta reintenta los envíos fallidos, así
 # que un mismo wamid puede llegar más de una vez.
@@ -223,6 +267,30 @@ async def delete_document(source_name: str) -> dict:
     if deleted == 0:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
     return {"deleted_chunks": deleted}
+
+
+@app.post("/documents/quote", response_model=QuoteResponse)
+async def create_quote(request: QuoteRequest) -> QuoteResponse:
+    """Genera una cotización PDF delegando en el microservicio document-service."""
+    result = await document_service.create_quote(
+        request_id=request.request_id,
+        tenant_id=request.tenant_id,
+        customer=request.customer,
+        items=request.items,
+        currency=request.currency,
+    )
+    if result is None:
+        raise HTTPException(
+            status_code=502,
+            detail="El document-service no pudo generar la cotización",
+        )
+    return QuoteResponse(
+        document_id=result.document_id,
+        quote_number=result.quote_number,
+        pdf_url=result.pdf_url,
+        size_bytes=result.size_bytes,
+        status=result.status,
+    )
 
 
 @app.get("/health")
