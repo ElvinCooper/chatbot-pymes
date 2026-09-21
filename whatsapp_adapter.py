@@ -89,11 +89,15 @@ def parse_messages(update: dict) -> list[tuple[str, str, str]]:
 
 
 def _format_for_whatsapp(text: str) -> str:
-    """Convierte el Markdown del LLM al formato que soporta WhatsApp.
+    """Convierte el Markdown del LLM a texto plano de WhatsApp.
 
-    WhatsApp usa *bold* (no **), _italica_, ~tachado~ y ```codigo```.
+    WhatsApp renderiza *bold* solo en algunos casos y de forma poco fiable,
+    así que se quitan todas las variantes de asteriscos para que nunca se
+    muestren crudos. Se procesan *** primero para que el de ** no deje rastros.
     """
+    text = re.sub(r"\*\*\*(.+?)\*\*\*", r"\1", text, flags=re.DOTALL)
     text = re.sub(r"\*\*(.+?)\*\*", r"\1", text, flags=re.DOTALL)
+    text = re.sub(r"(?<![*\w])\*(?!\s)([^*\n]+?)(?<!\s)\*(?![*\w])", r"\1", text)
     text = re.sub(r"^(\s*)- ", r"\1• ", text, flags=re.MULTILINE)
     return text
 
@@ -108,13 +112,14 @@ async def send_message(wa_id: str, text: str) -> None:
         )
         return
 
+    body = _format_for_whatsapp(text)[:MAX_BODY_CHARS]
     url = f"{GRAPH_BASE}/{phone_number_id}/messages"
     payload: dict = {
         "messaging_product": "whatsapp",
         "recipient_type": "individual",
         "to": wa_id,
         "type": "text",
-        "text": {"preview_url": False, "body": text[:MAX_BODY_CHARS]},
+        "text": {"preview_url": False, "body": body},
     }
     headers = {
         "Authorization": f"Bearer {access_token}",

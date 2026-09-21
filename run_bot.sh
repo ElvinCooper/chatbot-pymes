@@ -155,7 +155,7 @@ fi
 # --- Túnel de Cloudflare -----------------------------------------------------
 
 echo "Abriendo túnel HTTPS (esto puede tardar unos segundos)..."
-"$CLOUDFLARED" tunnel --url "http://127.0.0.1:$PORT" >"$LOGS_DIR/cloudflared.log" 2>&1 &
+"$CLOUDFLARED" tunnel --url "http://127.0.0.1:$PORT" --protocol http2 >"$LOGS_DIR/cloudflared.log" 2>&1 &
 echo $! > "$LOGS_DIR/cloudflared.pid"
 
 url=""
