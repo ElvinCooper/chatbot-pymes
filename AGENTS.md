@@ -17,22 +17,23 @@ Flat Python project, no packages. All source files are in the root:
 
 | File | Role |
 |---|---|
-| `main.py` | FastAPI app: `/chat`, `/documents/*`, `/health`, `/webhooks/telegram`, `/webhooks/whatsapp`. `/documents/quote` delega en `document_service.py` |
+| `main.py` | FastAPI app: `/chat`, `/documents/*`, `/health`, `/webhooks/telegram`, `/webhooks/whatsapp`. `/documents/quote` delega en `document_service.py`; los webhooks detectan cotizaciones y envían el PDF como archivo adjunto (`send_document`) |
 | `rag.py` | ChromaDB ingestion (chunking, indexing) and retrieval |
 | `embeddings.py` | Local multilingual E5-small via ONNX (no API key needed) |
-| `telegram_adapter.py` | Telegram Bot API helpers (parse updates, send messages) |
-| `whatsapp_adapter.py` | WhatsApp Cloud API helpers (signature check, parse/send) |
-| `document_service.py` | Client for the external document-service (`POST /quotes` → PDF) |
+| `telegram_adapter.py` | Telegram Bot API helpers (parse updates, send messages, send documents) |
+| `whatsapp_adapter.py` | WhatsApp Cloud API helpers (signature check, parse/send, send documents) |
+| `document_service.py` | Client for the external document-service (`POST /quotes` → PDF, fetch_quote_pdf) |
 
 ## Key gotchas
 
 - **Embedding model downloads on first use** (~226 MB to `~/.cache/huggingface`). Needs internet once, then runs fully offline.
 - **ChromaDB vector store** is in `chroma_db/` (gitignored, regenerable). To reset: `rm -rf chroma_db/` then re-upload documents.
-- **E5 embedding prefixes** matter: documents are prefixed `passage: `, queries are prefixed `query: `. Mixing them up breaks retrieval quality. See `embeddings.py:140-156`.
-- **LLM provider fallback**: Groq → OpenRouter → Gemini, automatic. Models are hardcoded in `PROVIDERS` (`main.py:69-88`). At least one `*_API_KEY` in `.env` is required or `/chat` returns 503.
+- **E5 embedding prefixes** matter: documents are prefixed `passage: `, queries are prefixed `query: ` (see `QUERY_PREFIX`/`PASSAGE_PREFIX`, `embeddings.py:31-32`). Mixing them up breaks retrieval quality.
+- **LLM provider fallback**: Groq → OpenRouter → Gemini, automatic. Models are hardcoded in `PROVIDERS` (`main.py:74-88`). At least one `*_API_KEY` in `.env` is required or `/chat` returns 503.
 - **Collection auto-recreation**: `rag.py` checks collection metadata at **import time** (`rag.py:36-67`). If the embedding model or distance metric changed, ChromaDB detects the mismatch and recreates the collection — existing documents must be re-indexed.
 - **Side effects at import**: `main.py` calls `load_dotenv()` and builds `PROVIDERS` from env; `rag.py` opens ChromaDB, loads the ONNX model, and runs the recreate check on `import`. Changes to `.env`, chunk sizes, or collection metadata require a full process restart (no hot reload).
-- **Conversation memory and WhatsApp wamid dedup are in-memory** (`main.py:129,134`): a restart wipes all sessions and lets a Meta retry of the same `wamid` through again.
+- **Cotizaciones = archivo adjunto, nunca texto**: si un mensaje pide una cotización, los webhooks extraen la estructura con el LLM (`_extract_quote_draft`), generan el PDF en el document-service, lo descargan (`fetch_quote_pdf`) y lo envían con `send_document` (WhatsApp sube media a la Graph API → mensaje tipo `document`; Telegram usa `sendDocument`). El system prompt prohíbe al LLM emitir PDFs en base64. Si la extracción falla, el mensaje cae al `/chat` normal.
+- **Conversation memory (`_conv_histories` + `_idle_*`) and WhatsApp wamid dedup (`_recent_wamids`) are in-memory** (`main.py:166-184`): a restart wipes all sessions and lets a Meta retry of the same `wamid` through again.
 
 ## Run a single test / verification
 

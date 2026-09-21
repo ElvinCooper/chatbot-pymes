@@ -118,6 +118,18 @@ curl -X POST http://127.0.0.1:8000/documents/quote \
 Devuelve `{document_id, quote_number, pdf_url, size_bytes, status}`. Si el
 document-service no está disponible o rechaza la petición, responde `502`.
 
+### Cotizaciones por chat (PDF adjunto)
+
+Cuando un cliente pide una cotización por WhatsApp o Telegram, el bot no
+responde con texto: extrae la estructura (ítems, cantidades y precios según la
+información del negocio) con el LLM, genera el PDF en el document-service y lo
+envía como **archivo adjunto** (`sendDocument` en Telegram; media + mensaje tipo
+`document` en WhatsApp). Nunca se envía el PDF en base64 ni como instrucciones.
+
+El teléfono del cliente se rellena con el número del canal si el LLM no lo
+detecta. Si la extracción falla (p. ej. faltan precios en la información del
+negocio), el mensaje se responde por el flujo normal de `/chat`.
+
 ## Bot de Telegram
 
 Para hablarle al chatbot desde tu celular, sin dominio ni configuración manual:

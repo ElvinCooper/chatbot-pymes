@@ -132,3 +132,55 @@ async def send_message(wa_id: str, text: str) -> None:
             logger.warning(
                 "Error al enviar por WhatsApp (%s): %s", resp.status_code, resp.text
             )
+
+
+async def send_document(wa_id: str, file_bytes: bytes, filename: str, caption: str = "") -> None:
+    """Envía un archivo PDF como documento (tipo 'document') por WhatsApp.
+
+    La Graph API exige dos pasos: subir el media (se obtiene un media_id) y
+    luego enviar un mensaje tipo 'document' referenciando ese id.
+    """
+    access_token = os.getenv("WHATSAPP_ACCESS_TOKEN")
+    phone_number_id = os.getenv("WHATSAPP_PHONE_NUMBER_ID")
+    if not access_token or not phone_number_id:
+        logger.warning(
+            "Faltan WHATSAPP_ACCESS_TOKEN/WHATSAPP_PHONE_NUMBER_ID; no se puede enviar el documento."
+        )
+        return
+
+    api_url = f"{GRAPH_BASE}/{phone_number_id}"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    upload = {
+        "messaging_product": (None, "whatsapp"),
+        "type": (None, "application/pdf"),
+        "file": (filename, file_bytes, "application/pdf"),
+    }
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        up = await client.post(f"{api_url}/media", headers=headers, files=upload)
+        if up.status_code != 200:
+            logger.warning(
+                "Fallo al subir el media a WhatsApp (%s): %s", up.status_code, up.text
+            )
+            return
+        media_id = (up.json() or {}).get("id")
+        if not media_id:
+            logger.warning("Respuesta de media de WhatsApp sin id: %s", up.text)
+            return
+
+        document: dict = {"id": media_id, "filename": filename}
+        if caption:
+            document["caption"] = caption
+        payload = {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": wa_id,
+            "type": "document",
+            "document": document,
+        }
+        resp = await client.post(f"{api_url}/messages", headers=headers, json=payload)
+        if resp.status_code != 200:
+            logger.warning(
+                "Fallo al enviar el documento por WhatsApp (%s): %s",
+                resp.status_code, resp.text,
+            )

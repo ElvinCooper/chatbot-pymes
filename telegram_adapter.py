@@ -75,3 +75,24 @@ def _format_for_telegram(text: str) -> str:
     text = re.sub(r'\*\*(.+?)\*\*', r'*\1*', text)
     text = re.sub(r'^(\s*)- ', r'\1• ', text, flags=re.MULTILINE)
     return text
+
+
+async def send_document(chat_id: int, file_bytes: bytes, filename: str, caption: str = "") -> None:
+    """Envía un archivo PDF como documento a un chat de Telegram (sendDocument)."""
+    bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    if not bot_token:
+        logger.warning("No se configuró TELEGRAM_BOT_TOKEN; no se puede enviar el documento.")
+        return
+    url = f"{TELEGRAM_API}/bot{bot_token}/sendDocument"
+    data: dict = {"chat_id": chat_id}
+    if caption:
+        data["caption"] = caption
+    files = {"document": (filename, file_bytes, "application/pdf")}
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        resp = await client.post(url, data=data, files=files)
+        if resp.status_code != 200:
+            logger.warning(
+                "Fallo al enviar el documento por Telegram (%s): %s",
+                resp.status_code, resp.text,
+            )

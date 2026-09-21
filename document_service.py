@@ -116,3 +116,25 @@ async def create_quote(
         return None
 
     return _parse_quote_response(base_url, data)
+
+
+async def fetch_quote_pdf(pdf_url: str) -> bytes | None:
+    """Descarga los bytes del PDF generado por el document-service.
+
+    La URL del PDF se sirve sin autenticación (estática), así que basta un GET.
+    Devuelve None si la descarga falla.
+    """
+    if not pdf_url:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=REQUEST_TIMEOUT) as client:
+            resp = await client.get(pdf_url)
+    except httpx.HTTPError as exc:
+        logger.warning("Error de red al descargar el PDF: %s", exc)
+        return None
+    if resp.status_code != 200:
+        logger.warning(
+            "No se pudo descargar el PDF (%s): %s", resp.status_code, resp.text[:200]
+        )
+        return None
+    return resp.content
