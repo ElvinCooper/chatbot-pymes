@@ -251,23 +251,29 @@ QUOTE_TENANT_ID = "chatbot"
 QUOTE_EXTRACTION_PROMPT = (
     "Eres el extractor de cotizaciones de un negocio. "
     "Respondes ÚNICAMENTE con un objeto JSON, sin texto adicional.\n"
-    "Revisa la conversación reciente y el mensaje más nuevo del cliente. Si el "
-    "cliente pidió (ahora o antes) una cotización o presupuesto de productos o "
-    "servicios, responde con esta forma:\n"
+    "El INTENT se decide SOLO por el último mensaje del cliente ({message}). "
+    "Un historial donde antes se pidió o se envió una cotización NO convierte "
+    "por sí solo el mensaje nuevo en una petición de cotización.\n"
+    "Responde con intent \"quote\" ÚNICAMENTE si el último mensaje:\n"
+    "  - pide una cotización o presupuesto nuevo, o\n"
+    "  - se refiere a una cotización pedida antes (p. ej. \"mándamela\", "
+    "\"re-envíame la cotización\", \"me la envías de nuevo\").\n"
+    "En cualquier otro caso (saludos, gracias, preguntas sobre productos, "
+    "horarios, contacto, etc.), responde exactamente: {\"intent\": \"no\"}.\n"
+    "Si el intent es \"quote\", usa esta forma:\n"
     "{\n"
     "  \"intent\": \"quote\",\n"
     "  \"customer\": {\"name\": \"nombre del cliente si se conoce, si no Cliente\", \"phone\": \"teléfono si se conoce, si no cadena vacía\"},\n"
     "  \"currency\": \"moneda indicada (ej. DOP o USD); si no se indica, DOP\",\n"
     "  \"items\": [{\"description\": \"producto o servicio\", \"quantity\": 1, \"unit_price\": 0.0}]\n"
     "}\n"
-    "Reglas: las cantidades y precios unitarios deben salir ÚNICAMENTE de la "
-    "información del negocio o de la conversación; NO inventes datos. Incluye un "
-    "elemento por cada producto o servicio pedido. Puedes completar los datos de "
-    "los ítems recurriendo a pedidos anteriores de la conversación. Si NO puedes "
-    "determinar los ítems, devuelve \"items\": [] (sigue siendo una cotización\n"
-    "que se pidió armar).\n"
-    "Si definitivamente NO hay ninguna solicitud de cotización o presupuesto en "
-    "la conversación, responde exactamente: {\"intent\": \"no\"}.\n\n"
+    "Reglas de ítems: las cantidades y precios deben salir ÚNICAMENTE de la "
+    "información del negocio, del último mensaje o de pedidos anteriores SOLO si "
+    "el último mensaje se refiere explícitamente a esa cotización previa. "
+    "NO inventes datos ni reutilices ítems de una cotización anterior si el "
+    "mensaje no la menciona. Incluye un elemento por cada producto o servicio "
+    "pedido. Si es una cotización pero no puedes determinar ítems, devuelve "
+    "\"items\": [] (sigue siendo una cotización que se pidió armar).\n\n"
     "--- CONVERSACIÓN RECIENTE ---\n{history}\n--- FIN DE LA CONVERSACIÓN ---\n\n"
     "El mensaje más reciente del cliente es: {message}\n\n"
     "--- INFORMACIÓN DEL NEGOCIO ---\n{context}\n--- FIN DE LA INFORMACIÓN ---"
@@ -358,9 +364,10 @@ async def _extract_quote_draft(
 
 
 QUOTE_GATE_KEYWORDS = (
-    "cotiza", "presupuest", "cotill", "paquete", "kit", "precio de",
-    "precio del", "cuanto cuesta", "cuánto cuesta", "armar", "buil",
-    "proforma", "factura", "documento",
+    "cotiza", "presupuest", "cotill", "paquete", "kit",
+    "armar", "buil", "proforma", "factura", "documento",
+    "mándamela", "mandamela", "envíamela", "enviamela",
+    "reenvíamela", "reenviamela",
 )
 
 
@@ -443,6 +450,8 @@ async def _run_quote_flow(
     """Maneja una solicitud de cotización. Devuelve True si el mensaje era una
     cotización (aunque no pudiera generarse el PDF); False si no lo era y debe
     seguir por el chat normal."""
+    if not _looks_like_quote_request(message):
+        return False
     context = rag.retrieve_context(message)
     history = _conv_histories.get(conversation_id, [])
     draft = await _extract_quote_draft(message, context, history)
