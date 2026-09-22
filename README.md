@@ -55,11 +55,11 @@ funciona; con varias, si el primero falla se pasa al siguiente.
 ## Cargar los datos del negocio (la única fuente de información)
 
 ```bash
-# Inicia el servidor
-uvicorn main:app --reload
+# Inicia el servidor (el puerto 8000 lo usa el document-service)
+uvicorn main:app --reload --port 8001
 
 # Sube tu archivo (.txt o .pdf). Reemplaza el ejemplo por tus datos reales.
-curl -X POST http://127.0.0.1:8000/documents/upload \
+curl -X POST http://127.0.0.1:8001/documents/upload \
   -F "file=@data/business_data.txt"
 ```
 
@@ -86,7 +86,7 @@ para probar. El contenido que indexes será lo único que el chatbot conozca.
 Ejemplo de chat:
 
 ```bash
-curl -X POST http://127.0.0.1:8000/chat \
+curl -X POST http://127.0.0.1:8001/chat \
   -H "Content-Type: application/json" \
   -d '{"message": "¿Cuánto cuesta el pan de masa madre?"}'
 ```
@@ -104,7 +104,7 @@ cada pregunta es independiente.
 `DOCUMENT_SERVICE_URL` e `INTERNAL_API_KEY` configurados):
 
 ```bash
-curl -X POST http://127.0.0.1:8000/documents/quote \
+curl -X POST http://127.0.0.1:8001/documents/quote \
   -H "Content-Type: application/json" \
   -d '{
     "request_id": "req-001",
@@ -179,7 +179,7 @@ Configuración:
 
 ```bash
 # 1. Completa las 4 variables WHATSAPP_* en .env
-# 2. Levanta servidor + túnel (puerto 8001, no choca con el de Telegram)
+# 2. Levanta servidor + túnel (puerto 8002, no choca con el del bot de Telegram en 8001)
 ./run_whatsapp.sh start
 ```
 

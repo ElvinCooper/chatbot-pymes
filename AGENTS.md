@@ -8,7 +8,7 @@ Python 3.12+ (developed on 3.14), `requirements.txt` unpinned.
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env  # add at least one API key
-uvicorn main:app --reload
+uvicorn main:app --reload --port 8001   # port 8000 is the document-service
 ```
 
 ## Architecture
@@ -40,17 +40,17 @@ Flat Python project, no packages. All source files are in the root:
 No test suite exists. To verify the system works end-to-end:
 
 ```bash
-# Start server
-uvicorn main:app --reload
+# Start server (default port 8001; 8000 is the document-service)
+uvicorn main:app --port 8001
 
 # Index sample data
-curl -X POST http://127.0.0.1:8000/documents/upload -F "file=@data/business_data.txt"
+curl -X POST http://127.0.0.1:8001/documents/upload -F "file=@data/business_data.txt"
 
 # Chat
-curl -X POST http://127.0.0.1:8000/chat -H "Content-Type: application/json" -d '{"message": "test"}'
+curl -X POST http://127.0.0.1:8001/chat -H "Content-Type: application/json" -d '{"message": "test"}'
 
 # Health check (shows configured providers)
-curl http://127.0.0.1:8000/health
+curl http://127.0.0.1:8001/health
 ```
 
 ## Language
@@ -63,8 +63,9 @@ Code comments, README, and user-facing strings are in Spanish. Maintain this con
 
 ## WhatsApp bot (Meta Cloud API)
 
-- `run_whatsapp.sh` starts uvicorn on port 8001 + a tunnel and **prints** the URL: Meta does NOT allow API webhook registration, the URL + verify token must be pasted manually in the dev dashboard (App → WhatsApp → Configuration → Webhook, and subscribe to `messages`). After a tunnel restart the URL must be re-pasted. Also needs `cloudflared` in PATH or as `./cloudflared`.
-- **Both run scripts share `logs/uvicorn.pid` and `logs/cloudflared.pid`** (`run_bot.sh:143,159` / `run_whatsapp.sh:93,109`): `stop` from either kills the other's processes. Run only one bot at a time.
+- `run_whatsapp.sh` starts uvicorn on port 8002 + a tunnel and **prints** the URL: Meta does NOT allow API webhook registration, the URL + verify token must be pasted manually in the dev dashboard (App → WhatsApp → Configuration → Webhook, and subscribe to `messages`). After a tunnel restart the URL must be re-pasted. Also needs `cloudflared` in PATH or as `./cloudflared`.
+- **Each run script only kills its own processes**: they write channel-specific pids (`logs/telegram_uvicorn.pid` + `telegram_cloudflared.pid` vs `logs/whatsapp_uvicorn.pid` + `whatsapp_cloudflared.pid`, see `run_bot.sh:144,160` / `run_whatsapp.sh:94,110`). `stop` from one no longer kills the other. Ports are fixed: telegram bot on **8001** (`run_bot.sh:23`), whatsapp bot on **8002**, document-service on **8000** — never run the bot on 8000, that's the document-service.
+- Both scripts skip launching uvicorn if `http://127.0.0.1:$PORT/health` already responds **with `"providers_configured"`** (`run_bot.sh:139` / `run_whatsapp.sh:89`) — any other service answering on that port is not reused as the bot.
 - **Three unrelated secrets**: `WHATSAPP_VERIFY_TOKEN` (handshake only), `WHATSAPP_APP_SECRET` (HMAC signature), `WHATSAPP_ACCESS_TOKEN` (send API).
 - The `X-Hub-Signature-256` is HMAC-SHA256 over the **raw request body** using the app secret — `main.py` reads `await request.body()` and never re-serializes the parsed JSON to verify (see `verify_signature` in `whatsapp_adapter.py`).
 - GET `/webhooks/whatsapp` must echo `hub.challenge` as **plain text** (no JSON) or the dashboard verification fails.

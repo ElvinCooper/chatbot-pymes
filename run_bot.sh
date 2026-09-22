@@ -20,7 +20,8 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-PORT="${PORT:-8000}"
+PORT="${PORT:-8001}"
+PID_PREFIX="telegram_"
 LOGS_DIR="logs"
 SECRET_VAR="TELEGRAM_WEBHOOK_SECRET"
 URL_FILE="$LOGS_DIR/webhook_url.txt"
@@ -37,7 +38,7 @@ telegram_api() { # $1 = método; resto = args curl
 
 stop_tracked() {
   for name in uvicorn cloudflared; do
-    local pidfile="$LOGS_DIR/$name.pid"
+    local pidfile="$LOGS_DIR/${PID_PREFIX}$name.pid"
     if [[ -f "$pidfile" ]]; then
       local pid
       pid="$(cat "$pidfile")"
@@ -135,12 +136,12 @@ fi
 
 stop_tracked
 
-if curl -sf "http://127.0.0.1:$PORT/health" >/dev/null 2>&1; then
+if curl -sf "http://127.0.0.1:$PORT/health" 2>/dev/null | grep -q '"providers_configured"'; then
   echo "Uvicorn ya responde en el puerto $PORT (lo reutilizo)."
 else
   echo "Levantando uvicorn en el puerto $PORT..."
   "$UVICORN" main:app --host 127.0.0.1 --port "$PORT" >"$LOGS_DIR/uvicorn.log" 2>&1 &
-  echo $! > "$LOGS_DIR/uvicorn.pid"
+  echo $! > "$LOGS_DIR/${PID_PREFIX}uvicorn.pid"
   for _ in $(seq 1 30); do
     curl -sf "http://127.0.0.1:$PORT/health" >/dev/null 2>&1 && break
     sleep 1
@@ -156,7 +157,7 @@ fi
 
 echo "Abriendo túnel HTTPS (esto puede tardar unos segundos)..."
 "$CLOUDFLARED" tunnel --url "http://127.0.0.1:$PORT" --protocol http2 >"$LOGS_DIR/cloudflared.log" 2>&1 &
-echo $! > "$LOGS_DIR/cloudflared.pid"
+echo $! > "$LOGS_DIR/${PID_PREFIX}cloudflared.pid"
 
 url=""
 for _ in $(seq 1 45); do
