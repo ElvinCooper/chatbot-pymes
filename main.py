@@ -22,6 +22,7 @@ import re
 import secrets
 import tempfile
 import time
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 
 from dotenv import load_dotenv
@@ -40,7 +41,22 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("chatbot")
 
-app = FastAPI(title="SMB Chatbot Assistant")
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Arranca el monitor de cierre por inactividad (una tarea por proceso)."""
+    task = asyncio.create_task(_idle_monitor())
+    try:
+        yield
+    finally:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
+
+app = FastAPI(title="SMB Chatbot Assistant", lifespan=lifespan)
 
 # Configuración de seguridad del webhook (no hardcodeada, viene de .env).
 TELEGRAM_WEBHOOK_SECRET = os.getenv("TELEGRAM_WEBHOOK_SECRET") or ""
@@ -161,34 +177,107 @@ def build_system_prompt(context: str) -> str:
 CONV_HISTORY_LIMIT = 8
 _conv_histories: dict[str, list[dict]] = {}
 
-# --- Cierre automático por inactividad (Flujo de Cierre, 2 etapas) ----------
-# Tras el último mensaje del usuario:
-#   1er aviso (cortesía) a los IDLE_NAG_SECONDS  (3 min) — llama la atención
-#   cierre  automático     a los IDLE_CLOSE_SECONDS (5 min = 3+2) — despedida +
-#   limpieza del contexto para la próxima sesión.
-IDLE_NAG_SECONDS = 180   # 3:00
-IDLE_CLOSE_SECONDS = 300 # 5:00
-IDLE_CHECK_INTERVAL = 20 # cada cuánto revisa el monitor (s)
+# --- Cierre automático por inactividad (una sola etapa) -----------------------
+# Tras la última respuesta del bot, si el cliente no escribe en IDLE_CLOSE_SECONDS
+# se envía CLOSE_FINAL_MSG y se limpia la sesión (memoria, cotizaciones, PDFs).
+# IDLE_CLOSE_SECONDS e IDLE_CHECK_INTERVAL son ajustables por env.
+IDLE_CLOSE_SECONDS = int(os.getenv("IDLE_CLOSE_SECONDS", "600"))   # 10:00
+IDLE_CHECK_INTERVAL = int(os.getenv("IDLE_CHECK_INTERVAL", "20"))  # cada cuánto revisa el monitor (s)
 
-# conversation_id -> timestamp (epoch) del último mensaje del usuario.
+# conversation_id -> monotonic() del momento en que el bot espera respuesta.
 _idle_last_activity: dict[str, float] = {}
-# conversation_id -> wamid/chat_id del canal para responder (wa_id o chat_id).
+# conversation_id -> destino del canal para responder (chat_id o wa_id).
 _idle_target_hint: dict[str, str] = {}
 
-CLOSE_COURTESY_MSG = (
-    "Hola, ¿sigues ahí? Cuéntame si necesitas algo más o si podemos dar por "
-    "terminada nuestra sesión."
-)
 CLOSE_FINAL_MSG = (
     "Como no he tenido respuesta, daré por cerrada esta conversación para "
     "mantener tus datos seguros. Si me necesitas de nuevo, solo escribe un "
     "mensaje. ¡Que tengas un buen día!"
 )
 
+
+def _track_idle(conversation_id: str, target_hint: str) -> None:
+    """Registra que el bot acaba de responder: arranca el contador de inactividad."""
+    _idle_last_activity[conversation_id] = time.monotonic()
+    _idle_target_hint[conversation_id] = target_hint
+
+
+def _clear_idle(conversation_id: str) -> None:
+    """Pausa el contador de inactividad (el cliente acaba de escribir)."""
+    _idle_last_activity.pop(conversation_id, None)
+    _idle_target_hint.pop(conversation_id, None)
+
+
+def _close_conversation(conversation_id: str) -> None:
+    """Limpia toda la sesión de una conversación cerrada por inactividad."""
+    _conv_histories.pop(conversation_id, None)
+    _pending_quote_info.discard(conversation_id)
+    _last_quote_pdf.pop(conversation_id, None)
+    _idle_last_activity.pop(conversation_id, None)
+    _idle_target_hint.pop(conversation_id, None)
+
+
+async def _idle_monitor() -> None:
+    """Cada IDLE_CHECK_INTERVAL cierra las conversaciones que llevan más de
+    IDLE_CLOSE_SECONDS sin respuesta del cliente."""
+    while True:
+        await asyncio.sleep(IDLE_CHECK_INTERVAL)
+        now = time.monotonic()
+        for conversation_id, last in list(_idle_last_activity.items()):
+            if now - last < IDLE_CLOSE_SECONDS:
+                continue
+            target_hint = _idle_target_hint.get(conversation_id)
+            if target_hint is None:
+                _close_conversation(conversation_id)
+                continue
+            logger.info("Cerrando por inactividad la conversación %s", conversation_id)
+            if conversation_id.startswith("whatsapp:"):
+                await whatsapp_adapter.send_message(target_hint, CLOSE_FINAL_MSG)
+            else:
+                await telegram_adapter.send_message(target_hint, CLOSE_FINAL_MSG)
+            _close_conversation(conversation_id)
+
 # Deduplicación de updates de WhatsApp: Meta reintenta los envíos fallidos, así
-# que un mismo wamid puede llegar más de una vez.
-_RECENT_WAMIDS_LIMIT = 200
-_recent_wamids: set[str] = set()
+# que un mismo wamid puede llegar más de una vez. Se persiste en un archivo para
+# que un reinicio del proceso no vuelva a responder un retry ya atendido.
+WAMID_TTL_SECONDS = 24 * 3600  # cuánto recordamos un wamid
+_RECENT_WAMIDS_LIMIT = 1000
+_RECENT_WAMIDS_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "logs", "recent_wamids.json"
+)
+_recent_wamids: dict[str, float] = {}  # wamid -> epoch
+
+
+def _prune_recent_wamids(now: float | None = None) -> None:
+    now = now or time.time()
+    stale = [w for w, ts in _recent_wamids.items() if now - ts > WAMID_TTL_SECONDS]
+    for w in stale:
+        del _recent_wamids[w]
+    overflow = len(_recent_wamids) - _RECENT_WAMIDS_LIMIT
+    if overflow > 0:
+        for w in sorted(_recent_wamids, key=_recent_wamids.get)[:overflow]:
+            del _recent_wamids[w]
+
+
+def _load_recent_wamids() -> dict[str, float]:
+    try:
+        with open(_RECENT_WAMIDS_PATH, "r") as fh:
+            data = json.load(fh)
+        return {str(k): float(v) for k, v in data.items() if isinstance(v, (int, float))}
+    except (OSError, ValueError, TypeError):
+        return {}
+
+
+def _save_recent_wamids() -> None:
+    try:
+        os.makedirs(os.path.dirname(_RECENT_WAMIDS_PATH), exist_ok=True)
+        with open(_RECENT_WAMIDS_PATH, "w") as fh:
+            json.dump(_recent_wamids, fh)
+    except OSError as exc:
+        logger.warning("No se pudo persistir recent_wamids: %s", exc)
+
+
+_recent_wamids = _load_recent_wamids()
 
 
 def _append_history(conversation_id: str | None, messages: list[dict]) -> None:
@@ -736,9 +825,17 @@ async def health() -> dict:
     }
 
 
+# Deduplicación de updates de Telegram: se ignoran update_id repetidos para no
+# responder dos veces al mismo mensaje (Telegram reintenta si el webhook no
+# responde 200 a tiempo).
+_SEEN_UPDATE_IDS_LIMIT = 1000
+_seen_update_ids: set[int] = set()
+
+
 @app.post("/webhooks/telegram")
 async def telegram_webhook(
     update: dict,
+    background_tasks: BackgroundTasks,
     x_telegram_bot_api_secret_token: str | None = Header(default=None),
 ) -> dict:
     verify_webhook_secret(x_telegram_bot_api_secret_token)
@@ -750,23 +847,44 @@ async def telegram_webhook(
         logger.info("Update de Telegram ignorado (sin chat_id o sin texto)")
         return {"status": "ok", "ignored": True}
 
+    update_id = update.get("update_id")
+    if update_id is not None:
+        if update_id in _seen_update_ids:
+            logger.info("Update de Telegram duplicado ignorado (update_id %s)", update_id)
+            return {"status": "ok", "deduplicated": True}
+        _seen_update_ids.add(update_id)
+        if len(_seen_update_ids) > _SEEN_UPDATE_IDS_LIMIT:
+            _seen_update_ids.clear()
+
     conversation_id = telegram_adapter.build_conversation_id(chat_id)
+    background_tasks.add_task(_handle_telegram_message, chat_id, conversation_id, message)
+    return {"status": "ok"}
+
+
+async def _handle_telegram_message(chat_id: int, conversation_id: str, message: str) -> None:
+    """Procesa un mensaje de Telegram en background: el webhook responde 200 rápido
+    para que Telegram no reintente el mismo update y duplique la respuesta."""
     logger.info("Telegram de %s: %r", chat_id, message[:120])
+    _clear_idle(conversation_id)
     async def send_message(text: str) -> None:
         await telegram_adapter.send_message(chat_id, text)
     async def send_document(pdf: bytes, filename: str, caption: str) -> None:
         await telegram_adapter.send_document(chat_id, pdf, filename, caption)
     if await _run_quote_flow(message, conversation_id, "", send_message, send_document):
-        return {"status": "ok", "quote": "sent"}
+        _track_idle(conversation_id, str(chat_id))
+        return
 
     request = ChatRequest(
         message=message,
         conversation_id=conversation_id,
     )
-    response = await chat(request)
-
+    try:
+        response = await chat(request)
+    except HTTPException as exc:
+        logger.error("Error al responder por Telegram (chat %s): %s", chat_id, exc.detail)
+        return
     await send_message(response.reply)
-    return {"status": "ok"}
+    _track_idle(conversation_id, str(chat_id))
 
 
 @app.get("/webhooks/whatsapp")
@@ -805,13 +923,13 @@ async def whatsapp_webhook(request: Request, background_tasks: BackgroundTasks) 
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Body inválido")
 
+    _prune_recent_wamids()
     for wamid, wa_id, message in whatsapp_adapter.parse_messages(update):
         if wamid in _recent_wamids:
             logger.info("Update de WhatsApp duplicado ignorado (wamid %s)", wamid)
             continue
-        _recent_wamids.add(wamid)
-        if len(_recent_wamids) > _RECENT_WAMIDS_LIMIT:
-            _recent_wamids.clear()
+        _recent_wamids[wamid] = time.time()
+        _save_recent_wamids()
         background_tasks.add_task(_handle_whatsapp_message, wamid, wa_id, message)
 
     return {"status": "ok"}
@@ -822,6 +940,7 @@ async def _handle_whatsapp_message(wamid: str, wa_id: str, message: str) -> None
     envía como archivo; si no, llama a /chat y responde con texto."""
     conversation_id = whatsapp_adapter.build_conversation_id(wa_id)
     logger.info("WhatsApp de %s (wamid %s): %r", wa_id, wamid, message[:120])
+    _clear_idle(conversation_id)
     async def send_message(text: str) -> None:
         await whatsapp_adapter.send_message(wa_id, text)
     async def send_document(pdf: bytes, filename: str, caption: str) -> None:
@@ -829,6 +948,7 @@ async def _handle_whatsapp_message(wamid: str, wa_id: str, message: str) -> None
     if await _run_quote_flow(
         message, conversation_id, wa_id, send_message, send_document
     ):
+        _track_idle(conversation_id, wa_id)
         return
 
     request = ChatRequest(
@@ -841,3 +961,4 @@ async def _handle_whatsapp_message(wamid: str, wa_id: str, message: str) -> None
         logger.error("Error al responder por WhatsApp (wamid %s): %s", wamid, exc.detail)
         return
     await send_message(response.reply)
+    _track_idle(conversation_id, wa_id)

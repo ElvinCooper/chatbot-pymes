@@ -25,6 +25,7 @@ import hmac
 import logging
 import os
 import re
+import time
 
 import httpx
 
@@ -34,6 +35,10 @@ CHANNEL_NAME = "whatsapp"
 GRAPH_VERSION = "v25.0"
 GRAPH_BASE = f"https://graph.facebook.com/{GRAPH_VERSION}"
 MAX_BODY_CHARS = 4096
+
+# Las entregas de webhook con mucho tiempo de vida se descartan: son retries de
+# Meta de mensajes ya respondidos (o muy viejos) tras caídas del bot.
+STALE_MESSAGE_SECONDS = 900
 
 UNSUPPORTED_MESSAGE_TYPES = ("audio", "button", "contacts", "document", "image",
                              "location", "reaction", "sticker", "video")
@@ -83,6 +88,16 @@ def parse_messages(update: dict) -> list[tuple[str, str, str]]:
                     continue
                 text = (message.get("text") or {}).get("body", "").strip()
                 if not text or not wa_id:
+                    continue
+                try:
+                    msg_ts = int(message.get("timestamp") or 0)
+                except (TypeError, ValueError):
+                    msg_ts = 0
+                if msg_ts and (time.time() - msg_ts) > STALE_MESSAGE_SECONDS:
+                    logger.info(
+                        "Mensaje antiguo ignorado (timestamp %s, wamid %s): retry de Meta",
+                        msg_ts, wamid,
+                    )
                     continue
                 messages.append((wamid, wa_id, text))
     return messages
