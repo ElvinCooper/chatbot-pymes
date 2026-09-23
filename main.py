@@ -13,6 +13,7 @@ Variables de entorno (ver .env.example):
 """
 
 import asyncio
+import datetime
 import hmac
 import json
 import logging
@@ -95,10 +96,16 @@ PROVIDERS: list[Provider] = [
 BASE_SYSTEM_PROMPT = (
     "Eres un asistente virtual para un pequeño o mediano negocio. "
     "Responde de forma breve, clara y amable. "
-    "NUNCA muestres PDFs en base64 ni instrucciones para decodificarlos: si el "
-    "cliente pide una cotización, el sistema la generará y enviará aparte; si te "
-    "toca responder por texto, dile solo que la cotización se le enviará en PDF "
-    "por este chat, sin asegurar que es inmediata. "
+    "NUNCA muestres PDFs en base64 ni instrucciones para decodificarlos: las "
+    "cotizaciones se envían como archivo PDF por separado, nunca por texto. "
+    "Si el cliente pide una cotización y EN ESTA CONVERSACIÓN ya se le envió "
+    "como PDF adjunto, NO prometas prepararla ni enviarla de nuevo: confirma "
+    "simplemente que ya se le envió y, si insiste, dile que se la reenviará "
+    "adjunta. Si la cotización todavía no está enviada, dile solo que la "
+    "cotización se le enviará en PDF por este chat, sin asegurar que es "
+    "inmediata. "
+    "Si el usuario solo agradece, saluda o se despide, responde en una sola "
+    "línea, amable, y cierra el tema sin extender la conversación. "
     "Si ya ofreciste los datos de contacto del negocio (WhatsApp, teléfono o "
     "correo) en esta conversación, no vuelvas a mencionarlos: repítelos solo si "
     "el usuario los pide de nuevo o si se está despidiendo."
@@ -251,13 +258,20 @@ QUOTE_TENANT_ID = "chatbot"
 QUOTE_EXTRACTION_PROMPT = (
     "Eres el extractor de cotizaciones de un negocio. "
     "Respondes ÚNICAMENTE con un objeto JSON, sin texto adicional.\n"
+    "Hoy es {today} (formato AAAA-MM-DD). Si el cliente pide la cotización "
+    "para una fecha relativa a hoy (p. ej. \"pasado mañana\", \"mañana\", "
+    "\"este sábado\"), calcula la fecha real del evento/delivery y ponla en "
+    "el campo \"event_date\" (AAAA-MM-DD). Déjalo vacío si no menciona fecha.\n"
     "El INTENT se decide SOLO por el último mensaje del cliente ({message}). "
     "Un historial donde antes se pidió o se envió una cotización NO convierte "
     "por sí solo el mensaje nuevo en una petición de cotización.\n"
     "Responde con intent \"quote\" ÚNICAMENTE si el último mensaje:\n"
     "  - pide una cotización o presupuesto nuevo, o\n"
     "  - se refiere a una cotización pedida antes (p. ej. \"mándamela\", "
-    "\"re-envíame la cotización\", \"me la envías de nuevo\").\n"
+    "\"re-envíame la cotización\", \"me la envías de nuevo\"), o\n"
+    "  - pide que se le envíe el PDF o el archivo adjunto de esa cotización "
+    "previa (p. ej. \"me puedes enviar el pdf\", \"me pasas el archivo de la "
+    "cotización\", \"reenvíame el pdf\", \"envíeme el archivo\").\n"
     "En cualquier otro caso (saludos, gracias, preguntas sobre productos, "
     "horarios, contacto, etc.), responde exactamente: {\"intent\": \"no\"}.\n"
     "Si el intent es \"quote\", usa esta forma:\n"
@@ -265,8 +279,11 @@ QUOTE_EXTRACTION_PROMPT = (
     "  \"intent\": \"quote\",\n"
     "  \"customer\": {\"name\": \"nombre del cliente si se conoce, si no Cliente\", \"phone\": \"teléfono si se conoce, si no cadena vacía\"},\n"
     "  \"currency\": \"moneda indicada (ej. DOP o USD); si no se indica, DOP\",\n"
+    "  \"event_date\": \"fecha del evento/delivery si se indica (AAAA-MM-DD), si no cadena vacía\",\n"
+    "  \"party_size\": 0,\n"
     "  \"items\": [{\"description\": \"producto o servicio\", \"quantity\": 1, \"unit_price\": 0.0}]\n"
     "}\n"
+    "\"party_size\": número de personas/invitados si se indica, si no 0.\n"
     "Reglas de ítems: las cantidades y precios deben salir ÚNICAMENTE de la "
     "información del negocio, del último mensaje o de pedidos anteriores SOLO si "
     "el último mensaje se refiere explícitamente a esa cotización previa. "
@@ -328,19 +345,39 @@ def _parse_quote_json(raw: str) -> dict | None:
     name = str(customer.get("name") or "").strip() or "Cliente"
     phone = str(customer.get("phone") or "").strip()
     currency = str(data.get("currency") or "").strip() or "DOP"
+
+    event_date = ""
+    event_date_raw = str(data.get("event_date") or "").strip()
+    if event_date_raw:
+        try:
+            event_date = datetime.date.fromisoformat(event_date_raw).isoformat()
+        except ValueError:
+            logger.warning("event_date inválido devuelto por el LLM: %s", event_date_raw)
+    try:
+        party_size = int(data.get("party_size") or 0)
+    except (TypeError, ValueError):
+        party_size = 0
+    if party_size < 0:
+        party_size = 0
+
     return {
         "intent": "quote",
         "customer": {"name": name, "phone": phone},
         "currency": currency,
+        "event_date": event_date,
+        "party_size": party_size,
         "items": items,
     }
 
 
 async def _extract_quote_draft(
-    message: str, context: str, history: list[dict] | None = None
+    message: str, context: str, history: list[dict] | None = None,
+    force_quote: bool = False,
 ) -> dict | None:
     """Pide al LLM el JSON estructurado de la cotización. Devuelve None si el
-    cliente no pidió una cotización o si ningún provider logró extraerla."""
+    cliente no pidió una cotización o si ningún provider logró extraerla.
+    Si force_quote es True, el último mensaje se trata como respuesta a las
+    preguntas de una cotización ya iniciada (intent obligado a \"quote\")."""
     history_text = "\n".join(
         f"{'Cliente' if m.get('role') == 'user' else 'Bot'}: {m.get('content', '')}"
         for m in (history or [])[-8:]
@@ -350,7 +387,21 @@ async def _extract_quote_draft(
         .replace("{message}", message)
         .replace("{context}", context)
         .replace("{history}", history_text)
+        .replace("{today}", datetime.date.today().isoformat())
     )
+    if force_quote:
+        system += (
+            "\n\nNota: el cliente está completando una cotización ya iniciada; "
+            "el bot le pidió los datos que faltaban y este último mensaje es su "
+            "respuesta con esos datos. Por lo tanto el intent DEBE ser \"quote\" "
+            "y NO debe salir items vacío: arma el JSON con lo que aporta este "
+            "mensaje (nombre, personas, fecha) y la información del negocio. "
+            "Si el cliente indicó para cuántas personas (p. ej. 15) o detalles "
+            "del producto, incluye el ítem con la cantidad correspondiente. "
+            "Si el precio del producto varía según el tamaño o la cantidad de "
+            "invitados (p. ej. los cotillones), inclúyelo igual con esa "
+            "cantidad y unit_price 0.0 (el proveedor confirmará el precio final)."
+        )
     draft = await _extract_quote_with(system, message)
     if draft is None and _looks_like_quote_request(message):
         logger.info("Reintento de extracción (mensaje con señales de cotización)")
@@ -368,6 +419,7 @@ QUOTE_GATE_KEYWORDS = (
     "armar", "buil", "proforma", "factura", "documento",
     "mándamela", "mandamela", "envíamela", "enviamela",
     "reenvíamela", "reenviamela",
+    "pdf", "archivo", "adjun", "reenvi",
 )
 
 
@@ -405,12 +457,22 @@ async def _materialize_quote(
     customer = dict(draft["customer"])
     if not customer.get("phone"):
         customer["phone"] = fallback_phone or "no indicado"
+    items = list(draft["items"])
+    extras = []
+    if draft.get("party_size"):
+        extras.append(f"{draft['party_size']} personas")
+    if draft.get("event_date"):
+        extras.append(f"evento el {draft['event_date']}")
+    if extras:
+        note = " · ".join(extras)
+        items[0] = dict(items[0])
+        items[0]["description"] = f"{items[0]['description']} ({note})"
     try:
         result = await document_service.create_quote(
             request_id=f"chat-{secrets.token_hex(8)}",
             tenant_id=QUOTE_TENANT_ID,
             customer=customer,
-            items=draft["items"],
+            items=items,
             currency=draft["currency"],
         )
     except Exception as exc:
@@ -425,7 +487,10 @@ async def _materialize_quote(
         return None
     caption = (
         f"Cotización {result.quote_number} ({draft['currency']}, "
-        f"{len(draft['items'])} ítems). Adjuntamos el archivo PDF."
+        f"{len(items)} ítems)"
+        + (f" para el {draft['event_date']}" if draft.get("event_date") else "")
+        + (" · precios a confirmar según tamaño" if any(i.get("unit_price", 0) == 0 for i in items) else "")
+        + ". Adjuntamos el archivo PDF."
     )
     return pdf, f"{result.quote_number}.pdf", caption
 
@@ -434,10 +499,81 @@ QUOTE_PENDING_MSG = (
     "¡Claro! En un momento te enviaré la cotización en PDF por este chat."
 )
 
+QUOTE_CLARIFY_MSG = (
+    "¡Claro! Para armarte la cotización en PDF necesito que me confirmes:\n"
+    "1. Los productos o servicios y sus cantidades (p. ej. cotillón para 15 "
+    "personas, y si quieres básico o premium).\n"
+    "2. El nombre a quien va la cotización.\n"
+    "3. Si es para una fecha concreta (p. ej. \"pasado mañana\"), dímela y la "
+    "calculo yo en la cotización."
+)
+
 # conversation_id -> (pdf_bytes, filename) de la última cotización enviada.
 # Permite reenviar la cotización cuando el cliente solo pide "mándamela" sin
 # repetir los ítems (se reenvía el PDF sin depender de que el LLM rearme el JSON).
 _last_quote_pdf: dict[str, tuple[bytes, str]] = {}
+
+# conversation_ids que esperan los datos faltantes de una cotización (el último
+# mensaje del bot fue QUOTE_CLARIFY_MSG). La siguiente respuesta del cliente se
+# sigue tratando como continuidad de esa cotización aunque no traiga keywords.
+# Es estado en memoria: un reinicio lo borra.
+_pending_quote_info: set[str] = set()
+
+# --- Respuesta corta para agradecimientos/cierres -----------------------------
+# Evita que "gracias" caiga al LLM y "prometa" enviar una cotización que ya se
+# envió. Se responde una sola línea, sin coste de llamada, y se limpia el estado
+# pendiente de la cotización.
+SOCIAL_CLOSE_MSG = "¡De nada! ¿En qué más te ayudo?"
+# Solo se considera cierre si TODOS los tokens del mensaje pertenecen al
+# vocabulario social (o son muletillas). Cualquier palabra con contenido real
+# ("necesito", "cotización", números, "otra") invalida el match y el mensaje
+# sigue su flujo normal.
+_SOCIAL_CLOSE_TRIGGERS = {
+    "gracias", "perfecto", "listo", "dale", "adios", "chao", "hasta", "luego",
+    "excelente", "genial",
+}
+_SOCIAL_CLOSE_ALLOWED = _SOCIAL_CLOSE_TRIGGERS | {
+    "de", "nada", "ok", "bueno", "bien", "súper", "super", "muchas", "mil",
+    "muchísimas", "muy", "si", "sí", "ahora", "espero", "te", "igual",
+}
+
+
+def _is_social_close(message: str) -> bool:
+    tokens = {t for t in re.split(r"\W+", message.lower()) if t}
+    if not tokens:
+        return False
+    if not tokens.intersection(_SOCIAL_CLOSE_TRIGGERS):
+        return False
+    return tokens.issubset(_SOCIAL_CLOSE_ALLOWED)
+
+# --- Detección de reenvío puro del último PDF --------------------------------
+# "envíame el archivo pdf", "reenvíame el pdf", "me pasas el archivo"...
+# Verbos que significan reenviar + sustantivo del archivo, y sin indicios de
+# que quiera generar una cotización nueva (cantidades, personas, precios...).
+_RESEND_VERBS = (
+    "enví", "envia", "mand", "reenví", "reenvi", "pasa", "pasame", "dame",
+)
+_RESEND_NOUNS = (
+    "pdf", "archivo", "adjun", "documento", "cotización", "cotizacion",
+    "mándamela", "mandamela", "envíamela", "enviamela",
+    "reenvíamela", "reenviamela", "mándala", "mandala", "mándamelo",
+    "mandamelo", "envíamelo", "enviamelo",
+)
+_NEW_QUOTE_HINTS = (
+    "persona", "tamañ", "cuánt", "cuant", "costo", "preci", "cotill",
+    "para", "con", "modific", "ampli",
+)
+
+
+def _is_pure_resend(message: str) -> bool:
+    """True si el mensaje solo pide reenviar el archivo ya enviado, sin aportar
+    datos de una cotización nueva."""
+    low = message.lower()
+    if not any(n in low for n in _RESEND_NOUNS):
+        return False
+    if not any(v in low for v in _RESEND_VERBS):
+        return False
+    return not any(h in low for h in _NEW_QUOTE_HINTS)
 
 
 async def _run_quote_flow(
@@ -450,12 +586,38 @@ async def _run_quote_flow(
     """Maneja una solicitud de cotización. Devuelve True si el mensaje era una
     cotización (aunque no pudiera generarse el PDF); False si no lo era y debe
     seguir por el chat normal."""
-    if not _looks_like_quote_request(message):
+    if _is_social_close(message):
+        logger.info("Mensaje social de cierre; respuesta breve sin LLM")
+        _pending_quote_info.discard(conversation_id)
+        _append_history(conversation_id, [
+            {"role": "user", "content": message},
+            {"role": "assistant", "content": SOCIAL_CLOSE_MSG},
+        ])
+        await send_message(SOCIAL_CLOSE_MSG)
+        return True
+
+    pending_quote = conversation_id in _pending_quote_info
+    if not _looks_like_quote_request(message) and not pending_quote:
         return False
+
+    if conversation_id in _last_quote_pdf and _is_pure_resend(message):
+        pdf, filename = _last_quote_pdf[conversation_id]
+        logger.info("Reenvío directo de %s (pedido de reenvío del archivo)", filename)
+        _pending_quote_info.discard(conversation_id)
+        _append_history(conversation_id, [
+            {"role": "user", "content": message},
+            {"role": "assistant", "content": f"La cotización {filename} fue reenviada en PDF adjunto."},
+        ])
+        await send_document(pdf, filename, "Te reenvío la cotización en PDF adjunto.")
+        return True
+
     context = rag.retrieve_context(message)
     history = _conv_histories.get(conversation_id, [])
-    draft = await _extract_quote_draft(message, context, history)
+    draft = await _extract_quote_draft(
+        message, context, history, force_quote=pending_quote,
+    )
     if draft is None:
+        _pending_quote_info.discard(conversation_id)
         return False
 
     _append_history(conversation_id, [{"role": "user", "content": message}])
@@ -467,18 +629,23 @@ async def _run_quote_flow(
             logger.info(
                 "Cotización solicitada sin ítems nuevos; se reenvía %s", filename
             )
+            _pending_quote_info.discard(conversation_id)
             _append_history(conversation_id, [
-                {"role": "assistant", "content": f"Cotización {filename} reenviada en PDF."},
+                {"role": "assistant", "content": f"La cotización {filename} fue reenviada en PDF adjunto."},
             ])
             await send_document(pdf, filename, "Te reenvío la cotización en PDF adjunto.")
             return True
-        logger.info("Cotización pedida sin ítems ni PDF previo; se responde pendiente")
+        logger.info(
+            "Cotización pedida sin ítems determinables; se piden los datos faltantes"
+        )
+        _pending_quote_info.add(conversation_id)
         _append_history(conversation_id, [
-            {"role": "assistant", "content": QUOTE_PENDING_MSG},
+            {"role": "assistant", "content": QUOTE_CLARIFY_MSG},
         ])
-        await send_message(QUOTE_PENDING_MSG)
+        await send_message(QUOTE_CLARIFY_MSG)
         return True
 
+    _pending_quote_info.discard(conversation_id)
     attachment = await _materialize_quote(draft, fallback_phone=fallback_phone)
     if attachment is None:
         logger.warning("No se materializó la cotización; se responde pendiente")
@@ -491,7 +658,7 @@ async def _run_quote_flow(
     pdf, filename, caption = attachment
     _last_quote_pdf[conversation_id] = (pdf, filename)
     _append_history(conversation_id, [
-        {"role": "assistant", "content": f"Cotización {filename} enviada en PDF."},
+        {"role": "assistant", "content": f"La cotización {filename} fue enviada en PDF adjunto."},
     ])
     await send_document(pdf, filename, caption)
     return True
@@ -584,6 +751,7 @@ async def telegram_webhook(
         return {"status": "ok", "ignored": True}
 
     conversation_id = telegram_adapter.build_conversation_id(chat_id)
+    logger.info("Telegram de %s: %r", chat_id, message[:120])
     async def send_message(text: str) -> None:
         await telegram_adapter.send_message(chat_id, text)
     async def send_document(pdf: bytes, filename: str, caption: str) -> None:
@@ -653,6 +821,7 @@ async def _handle_whatsapp_message(wamid: str, wa_id: str, message: str) -> None
     """Procesa un mensaje de WhatsApp: si pide cotización genera el PDF y lo
     envía como archivo; si no, llama a /chat y responde con texto."""
     conversation_id = whatsapp_adapter.build_conversation_id(wa_id)
+    logger.info("WhatsApp de %s (wamid %s): %r", wa_id, wamid, message[:120])
     async def send_message(text: str) -> None:
         await whatsapp_adapter.send_message(wa_id, text)
     async def send_document(pdf: bytes, filename: str, caption: str) -> None:
