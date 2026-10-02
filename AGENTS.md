@@ -23,9 +23,15 @@ Flat Python project, no packages. All source files are in the root:
 | `telegram_adapter.py` | Telegram Bot API helpers (parse updates, send messages, send documents) |
 | `whatsapp_adapter.py` | WhatsApp Cloud API helpers (signature check, parse/send, send documents) |
 | `document_service.py` | Client for the external document-service (`POST /quotes` → PDF, fetch_quote_pdf) |
+| `email_service.py` | Client for the external email-service (`POST /api/v1/emails/send` → email_id). **Todavía no lo llama ningún flujo**: queda listo y verificado, sin uso |
 
 ## Key gotchas
 
+- **Tres claves de servicios distintas, no las confundas**: `INTERNAL_API_KEY` (document-service, cabecera `X-Internal-API-Key`), `EMAIL_SERVICE_API_KEY` (email-service, cabecera `X-API-Key`) y las de los proveedores LLM. La API key de Resend **nunca** sale del email-service: el chatbot no la necesita. El remitente de los correos lo pone el email-service desde su `EMAIL_FROM`; mandar un `from` da 422 `INVALID_REQUEST` porque el esquema usa `extra="forbid"`.
+- **`Idempotency-Key` es obligatoria en la práctica**: el email-service nunca la genera por su cuenta. Sin ella, un reintento por timeout **reenvía el correo** y el cliente lo recibe duplicado. Usa `build_idempotency_key(scope, entity_id)` con un id estable del envío (`quote-email/quote-001`), misma clave para el mismo envío y distinta para cada uno.
+- **La clave de idempotencia caduca a las 24 h en Resend y el cuerpo manda**: reutilizar la misma clave con un cuerpo **distinto** devuelve `409 invalid_idempotent_request` → el email-service lo traduce a `502 RESEND_SEND_FAILED`, y `send_email` devuelve `None` con un warning. Clave+cuerpo idénticos → devuelve el mismo `email_id` sin reenviar.
+- `send_email` devuelve `None` (con `logger.warning`) ante falta de configuración, error de red, estado != 200 o respuesta sin `email_id`; nunca propaga excepciones, igual que `create_quote`. El email va en **Base64 en memoria**: `encode_attachment(filename, bytes, content_type)`, sin ficheros temporales. Límites del servicio: 10 adjuntos, 10 MB cada uno, 25 MB en total.
+- **`email_id` va en el nivel superior** de la respuesta, no dentro de `data`: el contrato es `{"success": true, "tenant_id": ..., "email_id": ...}` plano. El envelope de error usa la misma forma, así que hay que comprobar `success` antes de leer el id.
 - **Embedding model downloads on first use** (~226 MB to `~/.cache/huggingface`). Needs internet once, then runs fully offline.
 - **ChromaDB vector store** is in `chroma_db/` (gitignored, regenerable). To reset: `rm -rf chroma_db/` then re-upload documents.
 - **E5 embedding prefixes** matter: documents are prefixed `passage: `, queries are prefixed `query: ` (see `QUERY_PREFIX`/`PASSAGE_PREFIX`, `embeddings.py:31-32`). Mixing them up breaks retrieval quality.

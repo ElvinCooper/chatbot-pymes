@@ -118,6 +118,42 @@ curl -X POST http://127.0.0.1:8001/documents/quote \
 Devuelve `{document_id, quote_number, pdf_url, size_bytes, status}`. Si el
 document-service no está disponible o rechaza la petición, responde `502`.
 
+### Envío de correos (email-service)
+
+`email_service.py` es un cliente del microservicio `email-service`, que entrega
+los correos con Resend. **Todavía no lo invoca ningún flujo del bot**: está
+escrito y verificado contra el servicio real, pero desconectado a propósito.
+
+```python
+import email_service
+
+resultado = await email_service.send_email(
+    tenant_id="cliente_demo",
+    to="cliente@example.com",           # texto suelto o lista
+    subject="Tu cotización",
+    text="Adjuntamos tu cotización.",
+    attachments=[email_service.encode_attachment("cotizacion-001.pdf", pdf_bytes, "application/pdf")],
+    idempotency_key=email_service.build_idempotency_key("quote-email", "quote-001"),
+)
+```
+
+Devuelve `EmailResult(email_id, tenant_id)` o `None` (con `logger.warning`) si
+falta configuración, hay error de red o el servicio rechaza el envío.
+
+Tres cosas que conviene no pasar por alto:
+
+- **La `Idempotency-Key` no es opcional en la práctica.** El email-service nunca la genera; sin ella, un reintento vuelve a enviar el correo. Usa `build_idempotency_key()` con un identificador estable del envío.
+- **Misma clave + mismo cuerpo → el mismo `email_id`** (no duplica). Misma clave + cuerpo distinto → `502 RESEND_SEND_FAILED`, porque Resend rechaza con 409 al reutilizarla en 24 h.
+- **El remitente no lo elige el bot:** lo pone el email-service desde su `EMAIL_FROM`. Esta clave es distinta de `INTERNAL_API_KEY` (la de document-service), y la API key de Resend nunca sale del email-service.
+
+Configuración: `EMAIL_SERVICE_URL` (por defecto `http://127.0.0.1:8003`) y
+`EMAIL_SERVICE_API_KEY`. Si el chatbot también corre en Docker, la URL pasa a
+`http://email-service:8003`.
+
+> Con `EMAIL_FROM=onboarding@resend.dev` (modo pruebas de Resend) solo se puede
+> enviar a la dirección de la cuenta de Resend, así que una prueba real va
+> únicamente a tu propio correo hasta verificar el dominio.
+
 ### Cotizaciones por chat (PDF adjunto)
 
 Cuando un cliente pide una cotización por WhatsApp o Telegram, el bot no
