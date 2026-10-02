@@ -35,6 +35,7 @@ import rag
 import telegram_adapter
 import whatsapp_adapter
 import document_service
+import instagram_adapter
 
 load_dotenv()
 
@@ -61,6 +62,7 @@ app = FastAPI(title="SMB Chatbot Assistant", lifespan=lifespan)
 # Configuración de seguridad del webhook (no hardcodeada, viene de .env).
 TELEGRAM_WEBHOOK_SECRET = os.getenv("TELEGRAM_WEBHOOK_SECRET") or ""
 WEBHOOK_SECRET_HEADER = "X-Telegram-Bot-Api-Secret-Token"
+INSTAGRAM_VERIFY_TOKEN = os.getenv("INSTAGRAM_VERIFY_TOKEN")
 
 # WhatsApp Business Cloud API (Meta). El verify_token es el que se pega en el
 # panel de Meta (distinto del App Secret) y el App Secret valida la firma de
@@ -299,6 +301,60 @@ async def _try_provider(provider: Provider, messages: list[dict]) -> str:
         timeout=15,
     )
     return completion.choices[0].message.content or ""
+
+
+
+@app.get("/webhooks/instagram")
+async def instagram_webhook_verify(
+    hub_mode: str | None = Query(default=None, alias="hub.mode"),
+    hub_verify_token: str | None = Query(default=None, alias="hub.verify_token"),
+    hub_challenge: str | None = Query(default=None, alias="hub.challenge"),
+) -> PlainTextResponse:
+    """Handshake de verificación del webhook de Instagram."""
+    if not INSTAGRAM_VERIFY_TOKEN:
+        raise HTTPException(
+            status_code=503,
+            detail="INSTAGRAM_VERIFY_TOKEN no configurado",
+        )
+
+    if hub_mode == "subscribe" and hmac.compare_digest(
+        hub_verify_token or "",
+        INSTAGRAM_VERIFY_TOKEN,
+    ):
+        return PlainTextResponse(hub_challenge or "")
+
+    raise HTTPException(
+        status_code=403,
+        detail="Verify token de Instagram inválido",
+    )
+
+
+
+@app.post("/webhooks/instagram")
+async def instagram_webhook(
+    request: Request,
+    background_tasks: BackgroundTasks,
+) -> dict:
+    """Recibe eventos de Instagram."""
+    raw_body = await request.body()
+
+    try:
+        update = json.loads(raw_body)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Body inválido")
+
+    for message_id, sender_id, message in instagram_adapter.parse_messages(update):
+        logger.info(
+            "Instagram de %s (mid %s): %r",
+            sender_id,
+            message_id,
+            message[:120],
+        )
+
+    return {"status": "ok"}
+
+
+
 
 
 @app.post("/chat", response_model=ChatResponse)
