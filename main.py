@@ -37,6 +37,7 @@ import whatsapp_adapter
 import document_service
 import instagram_adapter
 import messenger_adapter
+import metrics
 
 load_dotenv()
 
@@ -95,6 +96,22 @@ class Provider:
     base_url: str
     api_key: str | None
     model: str
+
+
+@dataclass
+class LLMResult:
+    """Respuesta de un proveedor LLM con la medición de tokens (Fase 0).
+
+    Los tokens vienen del `usage` del proveedor que realmente respondió; si el
+    proveedor no reporta usage quedan en None (NULL en la BD de métricas) para
+    distinguir "no disponible" de "cero tokens". Nunca se estiman a mano.
+    """
+    text: str
+    provider: str
+    model: str
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    total_tokens: int | None = None
 
 
 # Orden = prioridad de intento. Ajusta modelos/orden según tu caso de uso.
@@ -349,7 +366,17 @@ def _append_history(conversation_id: str | None, messages: list[dict]) -> None:
     _conv_histories[conversation_id] = hist[-CONV_HISTORY_LIMIT:]
 
 
-async def _try_provider(provider: Provider, messages: list[dict]) -> str:
+def _channel_from_conversation(conversation_id: str | None) -> str:
+    """Devuelve el canal real si el conversation_id lleva prefijo (whatsapp:,
+    messenger:, telegram:, instagram:); si no, "api" (por ejemplo /chat directo)."""
+    if conversation_id:
+        for channel in ("whatsapp", "messenger", "telegram", "instagram"):
+            if conversation_id.startswith(f"{channel}:"):
+                return channel
+    return "api"
+
+
+async def _try_provider(provider: Provider, messages: list[dict]) -> LLMResult:
     if not provider.api_key:
         raise ValueError(f"{provider.name}: falta API key")
 
@@ -359,7 +386,17 @@ async def _try_provider(provider: Provider, messages: list[dict]) -> str:
         messages=messages,
         timeout=15,
     )
-    return completion.choices[0].message.content or ""
+    usage = completion.usage
+    return LLMResult(
+        text=completion.choices[0].message.content or "",
+        provider=provider.name,
+        model=provider.model,
+        # El proveedor que respondió entrega su propio usage; si no lo reporta,
+        # los tokens quedan en None (NULL en la BD) sin estimarse manualmente.
+        prompt_tokens=getattr(usage, "prompt_tokens", None) if usage else None,
+        completion_tokens=getattr(usage, "completion_tokens", None) if usage else None,
+        total_tokens=getattr(usage, "total_tokens", None) if usage else None,
+    )
 
 
 
@@ -429,16 +466,28 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
     for provider in PROVIDERS:
         try:
-            reply = await _try_provider(provider, messages)
-            logger.info("Respondido por %s (%s)", provider.name, provider.model)
+            result = await _try_provider(provider, messages)
+            logger.info("Respondido por %s (%s)", result.provider, result.model)
             _append_history(request.conversation_id, [
                 {"role": "user", "content": request.message},
-                {"role": "assistant", "content": reply},
+                {"role": "assistant", "content": result.text},
             ])
+            metrics.record_usage_event(
+                tenant_id=TENANT_ID,
+                channel=_channel_from_conversation(request.conversation_id),
+                event_type="chat_reply",
+                conversation_id=request.conversation_id,
+                provider=result.provider,
+                model=result.model,
+                prompt_tokens=result.prompt_tokens,
+                completion_tokens=result.completion_tokens,
+                total_tokens=result.total_tokens,
+                metadata={"used_context": bool(context)},
+            )
             return ChatResponse(
-                reply=reply,
-                provider_used=provider.name,
-                model_used=provider.model,
+                reply=result.text,
+                provider_used=result.provider,
+                model_used=result.model,
                 used_context=bool(context),
             )
         except (RateLimitError, APITimeoutError, APIError, ValueError) as exc:
@@ -458,6 +507,11 @@ async def chat(request: ChatRequest) -> ChatResponse:
 # y el canal envía el archivo adjunto real.
 
 QUOTE_TENANT_ID = "chatbot"
+
+# Tenant para las métricas de uso (Fase 0). Configurable por env; por defecto
+# coincide con el tenant actual de cotizaciones. La multi-tenancy completa NO
+# está implementada: todos los canales comparten este valor.
+TENANT_ID = os.getenv("TENANT_ID") or QUOTE_TENANT_ID
 
 QUOTE_EXTRACTION_PROMPT = (
     "Eres el extractor de cotizaciones de un negocio. "
@@ -576,7 +630,7 @@ def _parse_quote_json(raw: str) -> dict | None:
 
 async def _extract_quote_draft(
     message: str, context: str, history: list[dict] | None = None,
-    force_quote: bool = False,
+    force_quote: bool = False, conversation_id: str | None = None,
 ) -> dict | None:
     """Pide al LLM el JSON estructurado de la cotización. Devuelve None si el
     cliente no pidió una cotización o si ningún provider logró extraerla.
@@ -606,7 +660,7 @@ async def _extract_quote_draft(
             "invitados (p. ej. los cotillones), inclúyelo igual con esa "
             "cantidad y unit_price 0.0 (el proveedor confirmará el precio final)."
         )
-    draft = await _extract_quote_with(system, message)
+    draft = await _extract_quote_with(system, message, conversation_id)
     if draft is None and _looks_like_quote_request(message):
         logger.info("Reintento de extracción (mensaje con señales de cotización)")
         retry = (
@@ -614,7 +668,7 @@ async def _extract_quote_draft(
             "Obligatorio: responde ÚNICAMENTE con el objeto JSON "
             "{\"intent\": \"quote\", ...} descrito antes.\n\n"
         ) + system
-        draft = await _extract_quote_with(retry, message)
+        draft = await _extract_quote_with(retry, message, conversation_id)
     return draft
 
 
@@ -633,22 +687,36 @@ def _looks_like_quote_request(message: str) -> bool:
     return any(kw in low for kw in QUOTE_GATE_KEYWORDS)
 
 
-async def _extract_quote_with(system: str, message: str) -> dict | None:
+async def _extract_quote_with(
+    system: str, message: str, conversation_id: str | None = None,
+) -> dict | None:
     """Recorre los providers probando el prompt indicado y el primero que
-    devuelva un JSON de cotización válido gana."""
+    devuelva un JSON de cotización válido gana. Cada llamada real al LLM se
+    registra como un evento `quote_extraction` independiente (Fase 0)."""
     messages: list[dict] = [
         {"role": "system", "content": system},
         {"role": "user", "content": message},
     ]
     for provider in PROVIDERS:
         try:
-            raw = await _try_provider(provider, messages)
+            result = await _try_provider(provider, messages)
         except (RateLimitError, APITimeoutError, APIError, ValueError) as exc:
             logger.warning("Extractor de cotización falló en %s: %s", provider.name, exc)
             continue
-        draft = _parse_quote_json(raw)
+        metrics.record_usage_event(
+            tenant_id=TENANT_ID,
+            channel=_channel_from_conversation(conversation_id),
+            event_type="quote_extraction",
+            conversation_id=conversation_id,
+            provider=result.provider,
+            model=result.model,
+            prompt_tokens=result.prompt_tokens,
+            completion_tokens=result.completion_tokens,
+            total_tokens=result.total_tokens,
+        )
+        draft = _parse_quote_json(result.text)
         if draft:
-            logger.info("Cotización extraída con %s (%s)", provider.name, provider.model)
+            logger.info("Cotización extraída con %s (%s)", result.provider, result.model)
             return draft
     logger.info("No se extrajo una cotización de los providers")
     return None
@@ -819,6 +887,7 @@ async def _run_quote_flow(
     history = _conv_histories.get(conversation_id, [])
     draft = await _extract_quote_draft(
         message, context, history, force_quote=pending_quote,
+        conversation_id=conversation_id,
     )
     if draft is None:
         _pending_quote_info.discard(conversation_id)

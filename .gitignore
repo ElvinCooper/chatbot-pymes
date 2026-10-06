@@ -6,6 +6,11 @@ __pycache__/
 # Base de datos vectorial local (regenerable desde los documentos)
 chroma_db/
 
+# Métricas de uso (Fase 0): SQLite runtime, regenerable
+metrics.sqlite3
+metrics.sqlite3-wal
+metrics.sqlite3-shm
+
 # Logs y pids de run_bot.sh
 logs/
 

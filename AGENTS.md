@@ -26,6 +26,7 @@ Flat Python project, no packages. All source files are in the root:
 | `instagram_adapter.py` | Instagram webhook parser — **solo recepción** (extrae y loguea; no envía respuestas aún) |
 | `document_service.py` | Client for the external document-service (`POST /quotes` → PDF, fetch_quote_pdf) |
 | `email_service.py` | Client for the external email-service (`POST /api/v1/emails/send` → email_id). **Todavía no lo llama ningún flujo**: queda listo y verificado, sin uso |
+| `metrics.py` | Métricas de uso (Fase 0): registra cada llamada real al LLM en SQLite (tabla `usage_events`, BD runtime `metrics.sqlite3`, gitignored). Best-effort: si SQLite falla solo loguea y el bot sigue. **NO hay costeo todavía** (sin `cost_amount`, `unit_price`, etc.); las tarifas por modelo llegan en una fase posterior |
 
 `PLAN_MULTITENANT.md` es un plan **no implementado** (multitenencia por número de WhatsApp); el código actual es monocliente con `QUOTE_TENANT_ID = "chatbot"` hardcodeado (`main.py:460`). No asumas que existe lógica de tenants.
 
@@ -40,6 +41,7 @@ Flat Python project, no packages. All source files are in the root:
 - **ChromaDB vector store** is in `chroma_db/` (gitignored, regenerable). To reset: `rm -rf chroma_db/` then re-upload documents.
 - **E5 embedding prefixes** matter: documents are prefixed `passage: `, queries are prefixed `query: ` (see `QUERY_PREFIX`/`PASSAGE_PREFIX`, `embeddings.py:31-32`). Mixing them up breaks retrieval quality.
 - **LLM provider fallback**: Groq → OpenRouter → Gemini, automatic. Models are hardcoded in `PROVIDERS` (`main.py:91`). At least one `*_API_KEY` in `.env` is required or `/chat` returns 503.
+- **Métricas de uso (Fase 0), sin costeo**: cada respuesta del LLM registra un evento en `usage_events` (`metrics.py`, SQLite stdlib, BD runtime `metrics.sqlite3` gitignored): `event_type="chat_reply"` en `/chat` y `event_type="quote_extraction"` por cada llamada real de `_extract_quote_with` (los dos intentos son eventos independientes). `_try_provider` devuelve un `LLMResult` con `prompt_tokens`/`completion_tokens`/`total_tokens` leídos de `completion.usage` del proveedor que respondió; si el proveedor no reporta usage quedan en `NULL` (nunca se estiman a mano). Los eventos usan `TENANT_ID` (env, default `"chatbot"`, `main.py:462`), el canal se deduce del prefijo de `conversation_id` (`_channel_from_conversation`) y `metadata` no lleva nada sensible (sin keys, sin mensajes del usuario). Best-effort: si SQLite falla solo hay `logger.error` y el bot sigue igual. No tocar modelo/orden/fallback al editar: solo se mide.
 - **Collection auto-recreation**: `rag.py` checks collection metadata at **import time** (`rag.py:36-67`). If the embedding model or distance metric changed, ChromaDB detects the mismatch and recreates the collection — existing documents must be re-indexed.
 - **Side effects at import**: `main.py` calls `load_dotenv()` and builds `PROVIDERS` from env; `rag.py` opens ChromaDB, loads the ONNX model, and runs the recreate check on `import`. Changes to `.env`, chunk sizes, or collection metadata require a full process restart (no hot reload).
 - **Cotizaciones = archivo adjunto, nunca texto**: si un mensaje pide una cotización, los webhooks extraen la estructura con el LLM (`_extract_quote_draft`), generan el PDF en el document-service, lo descargan (`fetch_quote_pdf`) y lo envían con `send_document` (WhatsApp sube media a la Graph API → mensaje tipo `document`; Telegram usa `sendDocument`). El system prompt prohíbe al LLM emitir PDFs en base64. Si la extracción falla, el mensaje cae al `/chat` normal.
@@ -52,7 +54,13 @@ Flat Python project, no packages. All source files are in the root:
 
 ## Run a single test / verification
 
-No test suite exists. To verify the system works end-to-end:
+No integration test suite. There is a minimal unittest for the metrics layer (Fase 0) that uses a temp SQLite:
+
+```bash
+.venv/bin/python -m unittest tests/test_metrics.py -v
+```
+
+End-to-end manual verification:
 
 ```bash
 # Start server (default port 8001; 8000 is the document-service)
@@ -61,11 +69,17 @@ uvicorn main:app --port 8001
 # Index sample data
 curl -X POST http://127.0.0.1:8001/documents/upload -F "file=@data/business_data.txt"
 
-# Chat
+# Chat (registra un evento usage_events chat_reply en metrics.sqlite3)
 curl -X POST http://127.0.0.1:8001/chat -H "Content-Type: application/json" -d '{"message": "test"}'
 
 # Health check (shows configured providers)
 curl http://127.0.0.1:8001/health
+```
+
+To inspect recorded events:
+
+```bash
+.venv/bin/python -c "import sqlite3; c=sqlite3.connect('metrics.sqlite3'); print(c.execute('select event_type, provider, model, total_tokens, tenant_id from usage_events order by id').fetchall())"
 ```
 
 ## Language
