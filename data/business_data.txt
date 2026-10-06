@@ -1,66 +1,242 @@
-NOMBRE DEL NEGOCIO: Panadería "El Buen Pan"
+NOMBRE DEL NEGOCIO: Panadería y Repostería "El Buen Pan"
 
-RUBRO: Panadería y repostería artesanal
+RUBRO:
+Panadería y repostería artesanal.
 
-DESCRIPCIÓN: Somos una panadería familiar fundada en 1998, dedicada a la elaboración de pan
-artesanal, repostería y productos de desayuno. Todos nuestros productos se hornean a diario
-y usamos ingredientes de proveedores locales.
+DESCRIPCIÓN:
+Somos una panadería y repostería familiar fundada en 1998, dedicada a la elaboración de panes artesanales, repostería, bizcochos y productos de desayuno.
+
+Nuestros productos se hornean diariamente utilizando ingredientes seleccionados y proveedores locales. Ofrecemos productos para el consumo diario y también pedidos especiales para cumpleaños, celebraciones y eventos.
 
 HORARIOS:
-- Lunes a viernes: 7:00 a 20:00
-- Sábados: 8:00 a 20:00
-- Domingos y feriados: 8:00 a 14:00
+- Lunes a viernes: 7:00 a.m. a 8:00 p.m.
+- Sábados: 8:00 a.m. a 8:00 p.m.
+- Domingos y feriados: 8:00 a.m. a 2:00 p.m.
 
-UBICACIÓN: Calle Los Cerezos 245, esquina Avenida Central, Ciudad Jardín.
+UBICACIÓN:
+Calle Los Cerezos 245, esquina Avenida Central, Ciudad Jardín.
 
 CONTACTO:
 - Teléfono / WhatsApp: 555-123-4567
 - Correo: contacto@elbuenpan.com
-- Redes: @elbuenpan en Instagram y Facebook
+- Instagram: @elbuenpan
+- Facebook: @elbuenpan
 
-PAGOS: Aceptamos efectivo, tarjetas de débito y crédito (Visa, Mastercard), y pagos móviles.
+FORMAS DE PAGO:
+- Efectivo
+- Tarjetas de débito
+- Tarjetas de crédito Visa y Mastercard
+- Pagos móviles
+
+PRODUCTOS DE PANADERÍA:
+
+- Pan francés: RD$35.00 por unidad
+  Pan tradicional de corteza ligera y miga suave.
+
+- Pan japonés: RD$75.00 por unidad
+  Pan suave y ligeramente dulce, ideal para desayunos y meriendas.
+
+- Pan de masa madre: RD$275.00 por unidad
+  Pan artesanal de fermentación prolongada, con corteza crujiente y sabor ligeramente ácido.
+
+- Croissant de mantequilla: RD$150.00 por unidad
+  Croissant artesanal de textura hojaldrada y sabor a mantequilla.
+
+- Bagel: RD$110.00 por unidad
+  Pan de textura firme y miga suave, ideal para desayunos.
+
+- Arreglo de galletas: RD$450.00 por docena
+  Selección de galletas artesanales para compartir o regalar.
+
+REPOSTERÍA:
+
+- Pastel por libra: RD$850.00 por libra
+  Pasteles personalizados disponibles por encargo.
+
+- Bizcocho por libra: RD$900.00 por libra
+  Bizcochos artesanales disponibles por encargo. Se pueden preparar para cumpleaños, celebraciones y eventos.
+
+- Cupcakes: RD$95.00 por unidad
+  Sabores y decoraciones disponibles según disponibilidad.
+
+- Brownie: RD$125.00 por unidad
+  Brownie artesanal de chocolate.
+
+PEDIDOS ESPECIALES:
+
+Aceptamos pedidos especiales de pasteles, bizcochos, cupcakes, arreglos de galletas, cotillones y otros productos de repostería.
+
+Los pedidos especiales deben solicitarse con un mínimo de 48 horas de anticipación.
+
+Para pedidos personalizados o de grandes cantidades, el precio puede variar según diseño, tamaño, ingredientes y cantidad solicitada.
+
+BIZCOCHOS Y PASTELES POR ENCARGO:
+
+Ofrecemos bizcochos y pasteles por libra para cumpleaños, aniversarios, bodas, bautizos y otras celebraciones.
+
+El precio base es de RD$850.00 por libra para pasteles y RD$900.00 por libra para bizcochos.
+
+Los diseños personalizados, rellenos especiales, coberturas, decoraciones y temáticas pueden generar un costo adicional.
+
+Para solicitar una cotización personalizada, el cliente debe indicar:
+- Tipo de bizcocho o pastel
+- Cantidad de libras
+- Sabor
+- Tipo de relleno
+- Tipo de decoración
+- Fecha del evento
+
+Se requiere un mínimo de 48 horas de anticipación para pedidos estándar y mayor anticipación para pedidos grandes o diseños especiales.
+
+JUGOS NATURALES:
+
+Los jugos naturales se preparan diariamente con frutas seleccionadas.
+
+- Jugo de naranja natural: RD$195.00
+  Jugo preparado con naranja fresca.
+
+- Jugo de chinola natural: RD$195.00
+  Jugo refrescante preparado con pulpa de chinola.
+
+- Jugo de limón natural: RD$180.00
+  Bebida refrescante preparada con limón fresco.
+
+- Jugo de piña natural: RD$195.00
+  Jugo preparado con piña fresca.
+
+- Jugo de fresa natural: RD$225.00
+  Jugo preparado con fresas seleccionadas.
+
+- Jugo de naranja, zanahoria y jengibre: RD$225.00
+  Combinación de naranja fresca, zanahoria y un toque de jengibre.
+
+Tamaño estándar: 16 oz.
+
+CAFÉ:
+
+- Café de la casa pequeño: RD$100.00
+- Café de la casa grande: RD$150.00
+
+BEBIDAS:
+
+- Agua natural 500 ml: RD$50.00
+- Agua natural 1 litro: RD$75.00
+
+DESAYUNOS:
+Disponibles hasta las 12:00 p.m.
+
+- Desayuno clásico: RD$375.00
+  Incluye 2 huevos, pan del día, café de la casa y jugo natural.
+
+- Tostadas con aguacate: RD$295.00
+  Tostadas de pan artesanal acompañadas de aguacate.
+
+COTILLONES:
+
+Un cotillón es un paquete de fiesta para cumpleaños y celebraciones que incluye elementos decorativos y festivos.
+
+Cotillón básico:
+- Gorros de cumpleaños
+- Matracas
+- Serpentinas
+- Bolsitas de dulces
+
+Precio desde RD$450.00 por paquete.
+
+Cotillón premium:
+Incluye todo lo del cotillón básico más:
+- Globos con helio
+- Velas numeradas
+- Piquera
+- Banderines
+
+Precio desde RD$750.00 por paquete.
+
+El precio final depende del tamaño, contenido y cantidad de invitados.
+
+Los pedidos de cotillones requieren un mínimo de 48 horas de anticipación.
+
+Para pedidos de más de 50 unidades se ofrece un 10% de descuento, sujeto a disponibilidad y condiciones del pedido.
 
 PEDIDOS Y ENCARGOS:
-- Se aceptan pedidos especiales (pasteles, torras y cotillones) con un mínimo de 48 horas de anticipación.
 
-COTILLONES: Un cotillón es un paquete de fiesta para cumpleaños y celebraciones que incluye elementos
-decorativos y festivos (gorros de cumpleaños, matracas, silbatos, serpentinas, bolsitas de dulces, velas
-numeradas, globos, piqueras y platillos de sorbetes o dulces típicos). Ofrecemos dos tamaños:
-- Cotillón básico: gorros, matracas, serpentinas y bolsitas de dulces (ideal para mesas pequeñas).
-- Cotillón premium: incluye todo lo del básico más globos con helio, velas numeradas, piquera y banderines.
-Los pedidos de cotillones se solicitan con 48 horas de anticipación (misma política que los demás pedidos
-especiales) y el precio varía según el tamaño y la cantidad de invitados.
-- Para cotizaciones grandes (más de 50 unidades) se ofrece un 10% de descuento.
+- Los pedidos especiales requieren un mínimo de 48 horas de anticipación.
+- Los pedidos grandes pueden requerir mayor anticipación.
+- Para productos personalizados se puede solicitar un depósito previo.
+- La disponibilidad debe confirmarse antes de aceptar un pedido.
+- El precio final de productos personalizados se confirma mediante cotización.
 
-PRECIOS (en pesos dominicanos, RD$):
-- Pan japonés: RD$ 88.50 por unidad
-- Pan francés: RD$ 59.00 por unidad
-- Pan de masa madre: RD$ 265.50 por pan
-- Croissant de mantequilla: RD$ 162.25
-- Bagel: RD$ 118.00
-- Pastel por libra: RD$ 708.00
-- Arreglo de galletas (docena): RD$ 472.00
-- Café de la casa (pequeño): RD$ 118.00
-- Café de la casa (grande): RD$ 177.00
-- Jugo natural (cualquier sabor): RD$ 206.50
+DELIVERY:
 
-MENÚ DE DESAYUNO (servido hasta las 12:00):
-- Desayuno clásico (2 huevos, pan del día, café y jugo): RD$ 383.50
-- Tostadas con aguacate: RD$ 295.00
+Ofrecemos servicio de entrega a domicilio dentro de Ciudad Jardín.
 
-POLÍTICAS:
-- Devoluciones: no aceptamos devoluciones de productos de panadería después de salir del local, por higiene.
-  Solo se repondrá el producto si llega defectuoso (por ejemplo, quemado o crudo) con el ticket de compra.
-- Cambios: los cambios se pueden realizar dentro de las 2 horas siguientes a la compra, únicamente por
-  otro producto del mismo valor.
-- Entregas a domicilio: sí, dentro de la Ciudad Jardín con un costo de RD$ 118.00. Pedidos mínimos de
-  RD$ 590.00 para delivery. El tiempo de entrega estimado es de 45 minutos.
+- Costo de delivery: RD$120.00
+- Pedido mínimo: RD$600.00
+- Tiempo estimado de entrega: 45 minutos.
 
-ALERGENOS: Nuestros productos contienen gluten, lácteos, huevo y frutos secos, de acuerdo con cada receta.
-Por favor, consulta a nuestro personal si tienes restricciones alimentarias.
+El tiempo de entrega puede variar dependiendo del volumen de pedidos, tráfico y disponibilidad de repartidores.
 
-PROGRAMA DE FIDELIDAD: Por cada RD$ 2,950.00 acumulados en compras, el cliente recibe una docena de pan
-dulce de regalo. Los puntos se registran con el número de teléfono.
+POLÍTICA DE DEVOLUCIONES:
 
-EVENTOS: Ofrecemos mesas de dulces y cotillones para eventos (cumpleaños, bodas, bautizos). Solicita una
-cotización personalizada por WhatsApp o en el local.
+No aceptamos devoluciones de productos de panadería o repostería después de salir del establecimiento por razones de higiene y seguridad alimentaria.
+
+Si un producto presenta un defecto atribuible a su elaboración, el cliente puede solicitar reposición presentando el ticket de compra.
+
+POLÍTICA DE CAMBIOS:
+
+Los cambios pueden solicitarse dentro de las 2 horas siguientes a la compra y únicamente por otro producto de igual valor.
+
+Los productos personalizados o elaborados especialmente para un cliente no aplican para cambios, salvo que presenten un defecto atribuible a su elaboración.
+
+ALÉRGENOS:
+
+Nuestros productos pueden contener o tener contacto con:
+- Gluten
+- Lácteos
+- Huevo
+- Frutos secos
+
+La composición depende de cada receta.
+
+Los clientes con alergias o restricciones alimentarias deben consultar al personal antes de realizar su compra.
+
+No garantizamos la ausencia total de trazas de alérgenos.
+
+PROGRAMA DE FIDELIDAD:
+
+Por cada RD$3,000.00 acumulados en compras, el cliente recibe una docena de pan dulce de regalo.
+
+Los puntos se registran utilizando el número de teléfono del cliente.
+
+El cliente puede consultar su acumulado proporcionando el número de teléfono registrado.
+
+EVENTOS:
+
+Ofrecemos servicios para cumpleaños, bodas, bautizos y otras celebraciones.
+
+Disponemos de:
+- Bizcochos y pasteles por encargo
+- Cupcakes
+- Arreglos de galletas
+- Cotillones
+- Mesas de dulces
+
+Para eventos grandes recomendamos solicitar una cotización con anticipación.
+
+La cotización dependerá de la cantidad de personas, productos seleccionados, diseño y fecha del evento.
+
+REGLAS PARA EL ASISTENTE:
+
+1. Nunca inventar productos, precios, horarios o promociones.
+2. Si un producto no aparece en este catálogo, indicar que se debe consultar disponibilidad.
+3. Para pedidos personalizados, solicitar los datos necesarios antes de dar una cotización definitiva.
+4. No confirmar disponibilidad de un producto personalizado sin verificarla.
+5. Para pedidos especiales recordar que se requieren al menos 48 horas de anticipación.
+6. Cuando el cliente pregunte por un bizcocho o pastel, preguntar cantidad de libras, sabor, relleno, decoración y fecha.
+7. Cuando el cliente pregunte por jugos, indicar los sabores disponibles y el tamaño estándar de 16 oz.
+8. Cuando el cliente pregunte por delivery, indicar el pedido mínimo de RD$600.00, costo de RD$120.00 y tiempo estimado de 45 minutos.
+9. Los tiempos de entrega son estimados y pueden variar.
+10. Si el cliente pregunta por un precio que depende de personalización, explicar que requiere cotización.
+11. No proporcionar información que no esté definida en este documento.
+12. Mantener respuestas claras, amables y concisas.
+13. Cuando sea posible, responder toda la información solicitada en un solo mensaje.
