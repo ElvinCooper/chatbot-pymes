@@ -17,13 +17,17 @@ Flat Python project, no packages. All source files are in the root:
 
 | File | Role |
 |---|---|
-| `main.py` | FastAPI app: `/chat`, `/documents/*`, `/health`, `/webhooks/telegram`, `/webhooks/whatsapp`. `/documents/quote` delega en `document_service.py`; los webhooks detectan cotizaciones y envían el PDF como archivo adjunto (`send_document`) |
+| `main.py` | FastAPI app: `/chat`, `/documents/*`, `/health`, `/webhooks/telegram`, `/webhooks/whatsapp`, `/webhooks/messenger`, `/webhooks/instagram`. `/documents/quote` delega en `document_service.py`; los webhooks detectan cotizaciones y envían el PDF como archivo adjunto (`send_document`) |
 | `rag.py` | ChromaDB ingestion (chunking, indexing) and retrieval |
 | `embeddings.py` | Local multilingual E5-small via ONNX (no API key needed) |
 | `telegram_adapter.py` | Telegram Bot API helpers (parse updates, send messages, send documents) |
 | `whatsapp_adapter.py` | WhatsApp Cloud API helpers (signature check, parse/send, send documents) |
+| `messenger_adapter.py` | Messenger helpers (signature check, echo discard, parse/send text, send documents, chunking 2000 chars) |
+| `instagram_adapter.py` | Instagram webhook parser — **solo recepción** (extrae y loguea; no envía respuestas aún) |
 | `document_service.py` | Client for the external document-service (`POST /quotes` → PDF, fetch_quote_pdf) |
 | `email_service.py` | Client for the external email-service (`POST /api/v1/emails/send` → email_id). **Todavía no lo llama ningún flujo**: queda listo y verificado, sin uso |
+
+`PLAN_MULTITENANT.md` es un plan **no implementado** (multitenencia por número de WhatsApp); el código actual es monocliente con `QUOTE_TENANT_ID = "chatbot"` hardcodeado (`main.py:460`). No asumas que existe lógica de tenants.
 
 ## Key gotchas
 
@@ -42,9 +46,9 @@ Flat Python project, no packages. All source files are in the root:
 - **Fallos de cotización silenciosos**: sin `DOCUMENT_SERVICE_URL` o `INTERNAL_API_KEY` en `.env`, o si el document-service devuelve error / el PDF no se descarga, `_materialize_quote` devuelve `None` y el bot responde `QUOTE_PENDING_MSG` (texto genérico) — no se manda ningún PDF y la única pista es un `logger.warning`. Si "el PDF no llega", revisa esos logs antes de tocar código.
 - **Cotización sin ítems determinables → preguntar, nunca prometer**: si la extracción devuelve `items: []` (p. ej. un pedido genérico como "cotillón para pasado mañana" porque el precio del cotillón varía según tamaño e invitados), el bot responde con `QUOTE_CLARIFY_MSG` pidiendo productos/cantidades, nombre y fecha, y marca la conversación en `_pending_quote_info`. La siguiente respuesta del cliente se extrae con `force_quote=True` (intent obligado a "quote") aunque no traiga keywords. El prompt de extracción recibe la fecha de hoy (`{today}`) para calcular fechas relativas como "pasado mañana" y las pone en `event_date`; como la plantilla del document-service **no tiene campo de fecha**, la fecha/nº de personas se inyectan en la descripción del primer ítem y el título, y los ítems con `unit_price: 0.0` se marcan como "precios a confirmar según tamaño" en el caption.
 - **Reenvío determinista + cierre social**: si la conversación ya recibió un PDF (`_last_quote_pdf`), mensajes como "envíame el archivo pdf", "pásame el pdf" o "mándamela" reenvían **ese** PDF almacenado sin llamar al LLM (`_is_pure_resend`; el gate de cotización incluye `pdf`/`archivo`/`adjunto`/`reenvi`). Mensajes con datos de cotización nueva (personas, precios, "para...", etc.) NO se consideran reenvío puro y van a la extracción. Los "gracias"/cierres puros responden con `SOCIAL_CLOSE_MSG` (una línea, sin LLM) y limpian `_pending_quote_info`.
-- **Cierre automático por inactividad (una sola etapa)**: tras la última respuesta del bot, si el cliente no escribe en `IDLE_CLOSE_SECONDS` (env, default 600 = 10 min), un `_idle_monitor` (arrancado vía `lifespan`, revisa cada `IDLE_CHECK_INTERVAL`) envía `CLOSE_FINAL_MSG` y llamada `_close_conversation` limpia memoria, cotizaciones y PDFs. `_track_idle`/`_clear_idle` (`main.py:180-238`) registran el contador por `conversation_id`.
-- **State en memoria con excepción para el dedup**: memoria de conversación (`_conv_histories`), cotizaciones pendientes (`_pending_quote_info`) y último PDF (`_last_quote_pdf`) viven en memoria y se borran al reiniciar. El dedup de wamids de WhatsApp (`_recent_wamids`, `main.py:244-280`) **sí es persistente**: se guarda en `logs/recent_wamids.json` (gitignored) en cada update y se recarga al importar, con TTL de 24 h y tope de 1000 entradas (`WAMID_TTL_SECONDS`, `_RECENT_WAMIDS_LIMIT`). Así un reinicio no vuelve a responder un retry de Meta ya atendido. `/chat` también recibe estos wamids con `conversation_id` vía `_handle_*_message`.
-- **Entregas viejas de Meta se descartan**: `parse_messages` ignora mensajes cuyo `timestamp` supere `STALE_MESSAGE_SECONDS` (900 s ≈ 15 min, `whatsapp_adapter.py:41`) — son retries de Meta de mensajes ya respondidos; sin esto el bot "habla solo" tras una caída/lentitud prolongada del proceso.
+- **Cierre automático por inactividad (una sola etapa)**: tras la última respuesta del bot, si el cliente no escribe en `IDLE_CLOSE_SECONDS` (env, default 600 = 10 min), un `_idle_monitor` (arrancado vía `lifespan`, revisa cada `IDLE_CHECK_INTERVAL`) envía `CLOSE_FINAL_MSG` y llamada `_close_conversation` limpia memoria, cotizaciones y PDFs. `_track_idle`/`_clear_idle` (`main.py:180-238`) registran el contador por `conversation_id`; el monitor decide el canal por el prefijo del `conversation_id` (`whatsapp:`/`messenger:`/`telegram:` — `main.py:247-256`) y un canal desconocido solo loguea un warning sin enviar nada.
+- **State en memoria con excepción para el dedup**: memoria de conversación (`_conv_histories`, tope `CONV_HISTORY_LIMIT = 8` mensajes), cotizaciones pendientes (`_pending_quote_info`) y último PDF (`_last_quote_pdf`) viven en memoria y se borran al reiniciar. El dedup de WhatsApp (`_recent_wamids`, `main.py:244-280`) **y el de Messenger** (`_recent_mids`, `main.py:302-341`) **sí son persistentes**: se guardan en `logs/recent_wamids.json` / `logs/recent_mids.json` (gitignored) en cada update y se recargan al importar, con TTL de 24 h y tope de 1000 entradas (`WAMID_TTL_SECONDS`/`MID_TTL_SECONDS`, `_RECENT_*_LIMIT`). Así un reinicio no vuelve a responder un retry de Meta ya atendido. `/chat` también recibe estos wamids con `conversation_id` vía `_handle_*_message`.
+- **Entregas viejas de Meta se descartan**: los `parse_messages` de WhatsApp, Messenger e Instagram ignoran mensajes cuyo `timestamp` supere `STALE_MESSAGE_SECONDS` (900 s ≈ 15 min; los tres adapters) — son retries de Meta de mensajes ya respondidos; sin esto el bot "habla solo" tras una caída/lentitud prolongada del proceso. Messenger envía el timestamp en **milisegundos** y lo divide a 1000 antes de comparar.
 
 ## Run a single test / verification
 
@@ -77,8 +81,8 @@ Code comments, README, and user-facing strings are in Spanish. Maintain this con
 ## WhatsApp bot (Meta Cloud API)
 
 - `run_whatsapp.sh` starts uvicorn on port 8002 + a tunnel and **prints** the URL: Meta does NOT allow API webhook registration, the URL + verify token must be pasted manually in the dev dashboard (App → WhatsApp → Configuration → Webhook, and subscribe to `messages`). After a tunnel restart the URL must be re-pasted. Also needs `cloudflared` in PATH or as `./cloudflared`.
-- **Each run script only kills its own processes**: they write channel-specific pids (`logs/telegram_uvicorn.pid` + `telegram_cloudflared.pid` vs `logs/whatsapp_uvicorn.pid` + `whatsapp_cloudflared.pid`, see `run_bot.sh:144,160` / `run_whatsapp.sh:94,110`). `stop` from one no longer kills the other. Ports are fixed: telegram bot on **8001** (`run_bot.sh:23`), whatsapp bot on **8002**, document-service on **8000** — never run the bot on 8000, that's the document-service.
-- Both scripts skip launching uvicorn if `http://127.0.0.1:$PORT/health` already responds **with `"providers_configured"`** (`run_bot.sh:139` / `run_whatsapp.sh:89`) — any other service answering on that port is not reused as the bot.
+- **Each run script only kills its own processes**: they write channel-specific pids (`logs/telegram_uvicorn.pid` + `telegram_cloudflared.pid` vs `logs/whatsapp_uvicorn.pid` + `whatsapp_cloudflared.pid` vs `logs/messenger_uvicorn.pid` + `messenger_cloudflared.pid`, see `run_bot.sh:144,160` / `run_whatsapp.sh:94,110` / `run_messenger.sh:107,123`). `stop` from one no longer kills the others. Ports are fixed: telegram bot on **8001** (`run_bot.sh:23`), whatsapp bot on **8002**, messenger bot on **8004** (`run_messenger.sh:26`), document-service on **8000** — never run the bot on 8000, that's the document-service.
+- All three run scripts skip launching uvicorn if `http://127.0.0.1:$PORT/health` already responds **with `"providers_configured"`** (`run_bot.sh:139` / `run_whatsapp.sh:89` / `run_messenger.sh:102`) — any other service answering on that port is not reused as the bot.
 - **Three unrelated secrets**: `WHATSAPP_VERIFY_TOKEN` (handshake only), `WHATSAPP_APP_SECRET` (HMAC signature), `WHATSAPP_ACCESS_TOKEN` (send API).
 - The `X-Hub-Signature-256` is HMAC-SHA256 over the **raw request body** using the app secret — `main.py` reads `await request.body()` and never re-serializes the parsed JSON to verify (see `verify_signature` in `whatsapp_adapter.py`).
 - GET `/webhooks/whatsapp` must echo `hub.challenge` as **plain text** (no JSON) or the dashboard verification fails.
@@ -86,3 +90,18 @@ Code comments, README, and user-facing strings are in Spanish. Maintain this con
 - Meta retries failed deliveries → `main.py` dedups by `wamid` (persistido en `logs/recent_wamids.json`, ver gotchas) y procesa cada mensaje en un FastAPI `BackgroundTasks` para que el webhook responda 200 rápido.
 - Incoming text only: non-text types (media, interactive, buttons) are logged and ignored in `parse_messages`.
 - Only `type: text` messages from `entry[].changes[].value.messages[]` are handled; `conversation_id` is `whatsapp:<wa_id>`.
+
+## Messenger bot (Meta Graph API)
+
+- `run_messenger.sh` starts uvicorn on port 8004 + a tunnel and **prints** the URL: igual que WhatsApp, Meta no permite registrar el webhook por API — la URL + verify token se pegan a mano en el panel (App → Messenger → Configuration → Webhook, suscribirse a `messages`). Tras reiniciar el túnel hay que re-pegarla. Requiere `cloudflared` en PATH o como `./cloudflared`.
+- **Secrets**: `MESSENGER_VERIFY_TOKEN` (handshake, se responde el challenge en **texto plano**), `MESSENGER_APP_SECRET` (firma HMAC), `MESSENGER_ACCESS_TOKEN` (send API), `MESSENGER_PAGE_ID` (detectar ecos).
+- La firma `X-Hub-Signature-256` se verifica sobre el **body crudo** (`main.py:1108-1113`), igual que WhatsApp.
+- **Echoes descartados**: los mensajes que envió la propia Página llegan como eco — `parse_messages` los ignora por `message.is_echo`, por `sender.id == MESSENGER_PAGE_ID` y por el array `message_echoes` (`messenger_adapter.py:80-117`; Meta no garantiza que vengan los tres, por eso se comprueban todos). Sin esto el bot se responde a sí mismo en bucle.
+- Dedup por `mid` persistido en `logs/recent_mids.json` (ver gotchas); cada mensaje procesa en `BackgroundTasks` (`_handle_messenger_message`).
+- **Solo texto**: adjuntos/stickers/quick replies se loguean y se ignoran. El texto de respuesta se limpia de Markdown (`_format_for_messenger`) y se trocea en mensajes de ≤ 2000 chars (`_split_text`, corta en párrafos → líneas → espacios).
+- `conversation_id` es `messenger:<psid>`; el **psid no es un teléfono**, así que el flujo de cotización pasa `fallback_phone=""` (`main.py:1135`).
+- `parse_messages` descarta timestamps con más de 900 s (el timestamp llega en **milisegundos**).
+
+## Instagram (solo recepción)
+
+- `GET/POST /webhooks/instagram` existe y valida el handshake con `INSTAGRAM_VERIFY_TOKEN`, pero el POST **solo parsea y loguea** los mensajes (`main.py:405-413`) — `instagram_adapter.py` no tiene función de envío y el flujo de cotización no está conectado. No respondas por este canal hasta que se implemente el envío.
