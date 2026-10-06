@@ -136,3 +136,114 @@ INFO:chatbot.whatsapp:Mensaje antiguo ignorado (timestamp 1790860118, wamid wami
 INFO:     2a03:2880:21ff:55:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
 INFO:chatbot.whatsapp:Mensaje antiguo ignorado (timestamp 1790910764, wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGCBBQ0VCRjJGMjE4QjM1ODQ1NURBNDI1QkU4NUY4QzMwMAA=): retry de Meta
 INFO:     2a03:2880:21ff:72:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:5b:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGCBBQzc4ODZGNjZCREIzOUY1MjcyNUM0REYzQkUxNjE2QwA=): 'Hola'
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:12ff:48:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:5:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:73:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:10:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:3:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGCBBQzQ0OEM3MjFBMzg2N0NCRUJEQ0NDNzI2QzY1QkUyOAA=): 'Tienen jugos naturales?'
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:a:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:42:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:7:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:5b:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGCBBQ0VGQUE0MEU0RERFRkI3RUVGRDAwRjVGQ0QyQzdFQQA=): 'Y botellas de agua?'
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:12ff:47:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:57:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:3:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:73:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGCBBQzcxMzBBMEQwQUNEQzdDOEQ1RDZEQjhFOTg0M0QyNAA=): 'Hacen vizcochos?'
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:2:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:56:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:49:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGCBBQ0IwNkRCQzEyQkFDOEZBRDE3RTlFM0QxQkFDRjVCQgA=): 'Ok'
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:21ff:70:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:43:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:Cerrando por inactividad la conversación whatsapp:18092501339
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:c:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:15:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:7:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55864 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48712 - "DELETE /documents/business_data.txt HTTP/1.1" 200 OK
+/home/elvindev/ia-projects/chatbot-pymes/.venv/lib/python3.14/site-packages/chromadb/api/types.py:2839: UserWarning: Could not reconstruct embedding function multilingual-e5-small: 'multilingual-e5-small'. Setting to None.
+  result.float_list = cls._deserialize_float_list_value_type(
+INFO:     127.0.0.1:48718 - "POST /documents/upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56632 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56646 - "GET /health HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:     127.0.0.1:40738 - "POST /chat HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:     127.0.0.1:51600 - "POST /chat HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:     127.0.0.1:51606 - "POST /chat HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:5f:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:57:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:4:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGCBBQzU3ODVFMDk0QjE1QjAzOTJCREM0MDA4QTc5ODMzQQA=): 'Hola, quiero saber los precios y los productos que tienen disponible'
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:22ff:59:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:44:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:43:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:12ff:2:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGCBBQzFEM0U2NjEyQTc0QkREQjgzMEU3Q0QwRjJCMUVBMwA=): 'Me gustaria cotizar dos vizcochos para el sabado'
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:chatbot:Cotización pedida sin ítems determinables; se piden los datos faltantes
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:22ff:50:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:70:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:72:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:2:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGCBBQzIzMEJGNjREMDk5Qzg5RTQwMTZERUNBOUIyNDNCNwA=): 'Un bizcocho de tres libras para el proximo sabado a nombre de Elvin Cooper'
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/quotes "HTTP/1.1 201 Created"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8000/storage/COT-0039.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/media "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:4b:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:12ff:47:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:c:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:a:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGCBBQzBGNjUwODAxQkYxMkE2NEU2NTRCM0Q1QkM2MjFBQgA=): 'Excelente, gracias 👍🏼'
+INFO:chatbot:Mensaje social de cierre; respuesta breve sin LLM
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:22ff:7:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:12:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:57:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:3:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGCBBQzE3OUQ1RjBDODEzQTcyRDk3QkRGNjZBQjBBRjcyOAA=): 'Nada mas por el momento.'
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:22ff:1:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:44:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:4d:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:5a:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:Cerrando por inactividad la conversación whatsapp:18092501339
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:58:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:4a:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:10:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
