@@ -240,6 +240,64 @@ Listo: escribe al número del negocio desde tu teléfono y el chatbot responde.
 > reinicio; si reinicias, vuelve a ejecutar `./run_whatsapp.sh start` y repite
 > el paso 2 con la nueva URL.
 
+## Facebook Messenger (Messenger Platform de Meta)
+
+Conecta el chatbot a la **Página de Facebook** del negocio para que te escriban
+por Messenger. Igual que Telegram y WhatsApp, `run_messenger.sh` abre un túnel
+HTTPS de Cloudflare y te imprime la URL para pegarla en el panel de Meta.
+
+El endpoint público es `GET/POST /webhooks/messenger` (puerto **8004**).
+
+Requisitos en [developers.facebook.com](https://developers.facebook.com/):
+
+- App con Messenger habilitado y **una Página de Facebook** asociada
+  (no sirve un perfil personal).
+- `MESSENGER_PAGE_ID` — id numérico de la Página.
+- `MESSENGER_ACCESS_TOKEN` — token de la **Página** con el permiso
+  `pages_messaging` (generado en el Centro de estados / tu app).
+- `MESSENGER_APP_SECRET` — App Settings > Basic (para validar la firma).
+  Si la app es la misma que WhatsApp, puede ser el mismo valor.
+- `MESSENGER_VERIFY_TOKEN` — una cadena cualquiera que elijas.
+- `cloudflared` instalado (ver sección de Telegram).
+
+Configuración:
+
+```bash
+# 1. Completa las 4 variables MESSENGER_* en .env
+# 2. Levanta servidor + túnel (puerto 8004; no choca con 8001 Telegram ni 8002 WhatsApp)
+./run_messenger.sh start
+```
+
+El script imprime la URL pública. Después, en el panel de Meta:
+
+1. Tu app → Messenger → Settings / Webhooks (o App Settings → Webhooks).
+2. Callback URL: `https://<túnel>.trycloudflare.com/webhooks/messenger`
+3. Verify token: el valor de `MESSENGER_VERIFY_TOKEN`.
+4. Pulsa *Verify and save* (el servidor devuelve el `hub.challenge` en texto plano).
+5. En *Webhook fields*, suscríbete a `messages` (sin esto no llega nada).
+6. Abre tu Página en Facebook/Messenger y escribe al bot.
+
+Listo: te responde dentro de la conversación de Messenger.
+
+> **Ventana de 24 h**: igual que WhatsApp, solo se puede mandar texto libre
+> dentro de las 24 h posteriores al último mensaje del cliente; fuera de esa
+> ventana Meta solo acepta plantillas aprobadas. Los errores de envío se
+> registran en el log y no interrumpen el webhook.
+>
+> **Ecos propios**: si alguien escribe desde la Página (por ejemplo desde
+> Facebook, como administrador) Meta devuelve el mensaje con `is_echo` o en
+> `message_echoes`. Se descartan para que el bot **no responda a sí mismo**.
+>
+> **Adjuntos**: los `mid` de Messenger solo se obtienen en el payload entrante.
+> El texto largo se parte en trozos de 2000 caracteres, el límite de Messenger.
+> Los archivos llegan en `message.attachments` y **no se interpretan** (solo
+> texto), igual que el resto de canales; un PDF pedido por cotización se
+> **envía** como archivo vía `message_attachments` (límite 25 MB).
+>
+> **URL del túnel**: la URL gratuita de `trycloudflare.com` cambia en cada
+> reinicio; si reinicias, vuelve a ejecutar `./run_messenger.sh start` y repite
+> el paso 2 con la nueva URL.
+
 ## Estructura
 
 ```
@@ -248,8 +306,11 @@ rag.py                # Ingesta (troceado), indexado y recuperación en ChromaDB
 embeddings.py         # Embedding function multilingüe (E5-small en ONNX)
 telegram_adapter.py   # Helpers de la Bot API de Telegram (webhook, formato Markdown)
 whatsapp_adapter.py   # Helpers de la Cloud API de WhatsApp/Meta (firma, mensajes)
+messenger_adapter.py  # Helpers de Messenger Platform (parse de entry[].messaging[],
+                      #   firma X-Hub-Signature-256, envío de texto y PDF)
 run_bot.sh            # Levanta uvicorn + túnel Cloudflare y registra el webhook de Telegram
 run_whatsapp.sh       # Levanta uvicorn + túnel Cloudflare (webhook de WhatsApp se pega en Meta)
+run_messenger.sh      # Ídem, con el webhook de Messenger en el puerto 8004
 data/                 # Documentos del negocio (fuente de información)
 ```
 

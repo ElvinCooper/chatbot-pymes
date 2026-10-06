@@ -36,6 +36,7 @@ import telegram_adapter
 import whatsapp_adapter
 import document_service
 import instagram_adapter
+import messenger_adapter
 
 load_dotenv()
 
@@ -69,6 +70,13 @@ INSTAGRAM_VERIFY_TOKEN = os.getenv("INSTAGRAM_VERIFY_TOKEN")
 # los updates. Vacíos = canal deshabilitado / validación opcional.
 WHATSAPP_VERIFY_TOKEN = os.getenv("WHATSAPP_VERIFY_TOKEN") or ""
 WHATSAPP_APP_SECRET = os.getenv("WHATSAPP_APP_SECRET") or ""
+
+# Facebook Messenger Platform (Meta). Mismas dos piezas que WhatsApp: el
+# verify_token se pega en el panel (distinto del App Secret) y el App Secret
+# valida la firma. El PAGE_ID y el ACCESS_TOKEN los usa messenger_adapter para
+# enviar; pueden convivir o no con los de WhatsApp (misma app o apps distintas).
+MESSENGER_VERIFY_TOKEN = os.getenv("MESSENGER_VERIFY_TOKEN") or ""
+MESSENGER_APP_SECRET = os.getenv("MESSENGER_APP_SECRET") or ""
 
 
 def verify_webhook_secret(x_telegram_bot_api_secret_token: str | None = None) -> None:
@@ -233,10 +241,19 @@ async def _idle_monitor() -> None:
                 _close_conversation(conversation_id)
                 continue
             logger.info("Cerrando por inactividad la conversación %s", conversation_id)
+            # El prefijo del conversation_id decide el canal: con más de dos
+            # canales un else implícito acabaría mandando el cierre al
+            # equivocado, así que cada uno se comprueba explícitamente.
             if conversation_id.startswith("whatsapp:"):
                 await whatsapp_adapter.send_message(target_hint, CLOSE_FINAL_MSG)
+            elif conversation_id.startswith("messenger:"):
+                await messenger_adapter.send_message(target_hint, CLOSE_FINAL_MSG)
+            elif conversation_id.startswith("telegram:"):
+                await telegram_adapter.send_message(int(target_hint), CLOSE_FINAL_MSG)
             else:
-                await telegram_adapter.send_message(target_hint, CLOSE_FINAL_MSG)
+                logger.warning(
+                    "Canal desconocido en %s; no se envía el cierre", conversation_id
+                )
             _close_conversation(conversation_id)
 
 # Deduplicación de updates de WhatsApp: Meta reintenta los envíos fallidos, así
@@ -280,6 +297,48 @@ def _save_recent_wamids() -> None:
 
 
 _recent_wamids = _load_recent_wamids()
+
+
+# Deduplicación de mensajes de Messenger: mismo motivo que los wamids, pero cada
+# mid llega en su propio archivo porque los canales no comparten el store.
+MID_TTL_SECONDS = 24 * 3600  # cuánto recordamos un mid
+_RECENT_MIDS_LIMIT = 1000
+_RECENT_MIDS_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "logs", "recent_mids.json"
+)
+_recent_mids: dict[str, float] = {}  # mid -> epoch
+
+
+def _prune_recent_mids(now: float | None = None) -> None:
+    now = now or time.time()
+    stale = [m for m, ts in _recent_mids.items() if now - ts > MID_TTL_SECONDS]
+    for m in stale:
+        del _recent_mids[m]
+    overflow = len(_recent_mids) - _RECENT_MIDS_LIMIT
+    if overflow > 0:
+        for m in sorted(_recent_mids, key=_recent_mids.get)[:overflow]:
+            del _recent_mids[m]
+
+
+def _load_recent_mids() -> dict[str, float]:
+    try:
+        with open(_RECENT_MIDS_PATH, "r") as fh:
+            data = json.load(fh)
+        return {str(k): float(v) for k, v in data.items() if isinstance(v, (int, float))}
+    except (OSError, ValueError, TypeError):
+        return {}
+
+
+def _save_recent_mids() -> None:
+    try:
+        os.makedirs(os.path.dirname(_RECENT_MIDS_PATH), exist_ok=True)
+        with open(_RECENT_MIDS_PATH, "w") as fh:
+            json.dump(_recent_mids, fh)
+    except OSError as exc:
+        logger.warning("No se pudo persistir recent_mids: %s", exc)
+
+
+_recent_mids = _load_recent_mids()
 
 
 def _append_history(conversation_id: str | None, messages: list[dict]) -> None:
@@ -877,6 +936,7 @@ async def health() -> dict:
         "channels": {
             "telegram": bool(os.getenv("TELEGRAM_BOT_TOKEN")),
             "whatsapp": bool(os.getenv("WHATSAPP_ACCESS_TOKEN")) and bool(os.getenv("WHATSAPP_PHONE_NUMBER_ID")),
+            "messenger": bool(os.getenv("MESSENGER_ACCESS_TOKEN")) and bool(os.getenv("MESSENGER_PAGE_ID")),
         },
     }
 
@@ -1018,3 +1078,83 @@ async def _handle_whatsapp_message(wamid: str, wa_id: str, message: str) -> None
         return
     await send_message(response.reply)
     _track_idle(conversation_id, wa_id)
+
+
+@app.get("/webhooks/messenger")
+async def messenger_webhook_verify(
+    hub_mode: str | None = Query(default=None, alias="hub.mode"),
+    hub_verify_token: str | None = Query(default=None, alias="hub.verify_token"),
+    hub_challenge: str | None = Query(default=None, alias="hub.challenge"),
+) -> PlainTextResponse:
+    """Handshake de verificación de Meta. Debe responder con el challenge
+    CRUDO (texto plano, no JSON) si el verify_token coincide."""
+    if not MESSENGER_VERIFY_TOKEN:
+        raise HTTPException(status_code=503, detail="MESSENGER_VERIFY_TOKEN no configurado")
+    if hub_mode == "subscribe" and hmac.compare_digest(
+        hub_verify_token or "", MESSENGER_VERIFY_TOKEN
+    ):
+        return PlainTextResponse(hub_challenge or "")
+    raise HTTPException(status_code=403, detail="Verify token inválido")
+
+
+@app.post("/webhooks/messenger")
+async def messenger_webhook(request: Request, background_tasks: BackgroundTasks) -> dict:
+    """Recibe los eventos de Messenger. Lee el body crudo para validar la firma
+    y procesa la conversación en background para responder 200 rápido (Meta
+    reintenta si tarda o falla)."""
+    if not MESSENGER_VERIFY_TOKEN:
+        raise HTTPException(status_code=503, detail="MESSENGER_VERIFY_TOKEN no configurado")
+
+    raw_body = await request.body()
+
+    if MESSENGER_APP_SECRET:
+        signature = request.headers.get("X-Hub-Signature-256")
+        if not messenger_adapter.verify_signature(raw_body, signature, MESSENGER_APP_SECRET):
+            raise HTTPException(status_code=401, detail="Firma de webhook inválida")
+    try:
+        update = json.loads(raw_body)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Body inválido")
+
+    _prune_recent_mids()
+    for mid, psid, message in messenger_adapter.parse_messages(update):
+        if mid in _recent_mids:
+            logger.info("Update de Messenger duplicado ignorado (mid %s)", mid)
+            continue
+        _recent_mids[mid] = time.time()
+        _save_recent_mids()
+        background_tasks.add_task(_handle_messenger_message, mid, psid, message)
+
+    return {"status": "ok"}
+
+
+async def _handle_messenger_message(mid: str, psid: str, message: str) -> None:
+    """Procesa un mensaje de Messenger: si pide cotización genera el PDF y lo
+    envía como archivo; si no, llama a /chat y responde con texto.
+
+    El fallback_phone va vacío porque el psid de Messenger no es un teléfono.
+    """
+    conversation_id = messenger_adapter.build_conversation_id(psid)
+    logger.info("Messenger de %s (mid %s): %r", psid, mid, message[:120])
+    _clear_idle(conversation_id)
+    async def send_message(text: str) -> None:
+        await messenger_adapter.send_message(psid, text)
+    async def send_document(pdf: bytes, filename: str, caption: str) -> None:
+        await messenger_adapter.send_document(psid, pdf, filename, caption)
+    if await _run_quote_flow(
+        message, conversation_id, "", send_message, send_document
+    ):
+        _track_idle(conversation_id, psid)
+        return
+
+    request = ChatRequest(
+        message=message,
+        conversation_id=conversation_id,
+    )
+    try:
+        response = await chat(request)
+    except HTTPException as exc:
+        logger.error("Error al responder por Messenger (mid %s): %s", mid, exc.detail)
+        return
+    await send_message(response.reply)
+    _track_idle(conversation_id, psid)
