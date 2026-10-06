@@ -1,0 +1,138 @@
+INFO:     Started server process [5065]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8002 (Press CTRL+C to quit)
+INFO:     127.0.0.1:42858 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42866 - "GET /health HTTP/1.1" 200 OK
+INFO:     2a03:2880:24ff:5f:::0 - "GET /webhooks/whatsapp?hub.mode=subscribe&hub.challenge=46533497&hub.verify_token=webhook-verify-2026&hub_mode=subscribe&hub_challenge=46533497&hub_verify_token=webhook-verify-2026 HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:74:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGCBBQzAwQzcwODMxRTQ5NEFGRDdFMTEyQjUzQTM3QjBDMgA=): 'Hello'
+INFO:httpx:HTTP Request: GET https://huggingface.co/api/agent-harnesses "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/onnx/tokenizer.json "HTTP/1.1 302 Found"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/onnx/model_O4.onnx "HTTP/1.1 302 Found"
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:22ff:49:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:5f:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:74:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:44:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGCBBQzQzMDI4OEM2QTFDMjc2MzMzQjU1OUJGMzhDRUE5RgA=): 'Que products tienen disponibles?'
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:6:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:5f:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:6:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:Cerrando por inactividad la conversación whatsapp:18092501339
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:3:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:5b:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:4a:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:50:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:9:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGBYzRUIwRTFCRjE3MjUyNDBGNTIyRjEzAA==): 'Waoo veo que tienen muchos productos!'
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:4c:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:5:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:49:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGBYzRUIwRUU2MDZFNEQ5MDdDNzgzQUFCAA==): 'Hacen cotizaciones?'
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:chatbot:Cotización pedida sin ítems determinables; se piden los datos faltantes
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:41:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:71:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:47:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:43:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:7:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGBYzRUIwOTY5MTVBNDQxMDExNzNCQzBBAA==): 'Quiero un costillon para 35 personas, eso es para el proximo viernes a nombre de Katherin Castro'
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+WARNING:chatbot.document_service:Error de red al llamar al document-service: All connection attempts failed
+WARNING:chatbot:document-service no generó la cotización
+WARNING:chatbot:No se materializó la cotización; se responde pendiente
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:1:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:4f:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:5:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:1:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:Cerrando por inactividad la conversación whatsapp:18092501339
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:42:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:41:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:48:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:6:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGBYzRUIwODU3QjQwODE3MDhFMTIxQkRCAA==): 'Puedes hacerme la cotizacion que te pedi?'
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:chatbot:Cotización pedida sin ítems determinables; se piden los datos faltantes
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:49:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:41:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:Cerrando por inactividad la conversación whatsapp:18092501339
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:54:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:52:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:47:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:70:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:4d:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:12ff:70:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGBYzRUIwQzI4MDY4NTUwRDczMkFEQjQ4AA==): 'Quiero un costillon para 35 personas, eso es para el proximo viernes a nombre de Katherin Castro'
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:22ff:56:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:41:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:51:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:59:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGBYzRUIwNjlCMUIzREY1MTE3MTVEMTJGAA==): 'solo espero la cotizacion, gracias'
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:chatbot:Cotización pedida sin ítems determinables; se piden los datos faltantes
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:44:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:7:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:7:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:5:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGBYzRUIwNEI3MEVDODhCNjQyQzA4MEQwAA==): 'Quiero un costillon para 35 personas, eso es para el proximo viernes a nombre de Katherin Castro'
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/quotes "HTTP/1.1 201 Created"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8000/storage/COT-0038.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/media "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:4e:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:43:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:5a:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:4c:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:5f:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGBYzRUIwNTNDRjc2QjQyRDQ0NEYwMzY3AA==): 'Gracias!'
+INFO:chatbot:Mensaje social de cierre; respuesta breve sin LLM
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:22ff:43:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:4f:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:5b:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:53:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:WhatsApp de 18092501339 (wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGBYzRUIwRUVEMDQxQjQ3NTM2NzM2RkE3AA==): 'nada mas por el momento 🙌🏼'
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:22ff:5b:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:56:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:12ff:9:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:70:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot:Cerrando por inactividad la conversación whatsapp:18092501339
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:2:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:55:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:58:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot.whatsapp:Mensaje antiguo ignorado (timestamp 1790860118, wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGCBBQ0FDOTQ4MzE4MUYxQTc5OTk4NUI4QzlCRDJCRDc5RAA=): retry de Meta
+INFO:     2a03:2880:21ff:55:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:chatbot.whatsapp:Mensaje antiguo ignorado (timestamp 1790910764, wamid wamid.HBgLMTgwOTI1MDEzMzkVAgASGCBBQ0VCRjJGMjE4QjM1ODQ1NURBNDI1QkU4NUY4QzMwMAA=): retry de Meta
+INFO:     2a03:2880:21ff:72:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK

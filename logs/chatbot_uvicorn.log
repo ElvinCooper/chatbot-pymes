@@ -1,0 +1,586 @@
+INFO:     Started server process [9445]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
+INFO:     127.0.0.1:41052 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41068 - "GET /health HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9445]
+INFO:     Started server process [10031]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
+INFO:     127.0.0.1:40998 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33292 - "GET /health HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/quotes "HTTP/1.1 201 Created"
+INFO:     127.0.0.1:59218 - "POST /documents/quote HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/quotes "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:55106 - "POST /documents/quote HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:51:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:21ff:44:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:2c:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:2:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:43:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:52:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:73:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:e:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:19:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:22ff:54:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:40:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:43:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:56:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:22ff:4d:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:48:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:3:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:18:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:17:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:50:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:53:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:47:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:7:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:24:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:74:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:45:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:3:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:28:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:48:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:21ff:48:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:4a:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:9:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:15:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:12ff:7c:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:5e:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:4c:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:4f:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:43:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:25:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:4b:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [10031]
+INFO:     Started server process [15495]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
+INFO:     127.0.0.1:50950 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34220 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/quotes "HTTP/1.1 422 Unprocessable Entity"
+WARNING:chatbot.document_service:Error al generar cotización en document-service (422): {"detail":[{"type":"string_too_short","loc":["body","customer","phone"],"msg":"String should have at least 1 character","input":"","ctx":{"min_length":1}}]}
+WARNING:chatbot:No se materializó la cotización; se omite el envío del PDF
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 400 Bad Request"
+WARNING:chatbot.whatsapp:Error al enviar por WhatsApp (400): {"error":{"message":"(#131030) Recipient phone number not in allowed list","code":131030,"type":"OAuthException","error_data":{"messaging_product":"whatsapp","details":"Recipient phone number not in allowed list: Add recipient phone number to recipient list and try again."},"fbtrace_id":"AuG57C4uKb_Dd5M_rBTi9Dt"}}
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [15495]
+INFO:     Started server process [16955]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
+INFO:     127.0.0.1:39836 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39838 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54172 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/quotes "HTTP/1.1 201 Created"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8000/storage/COT-0002.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/media "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 400 Bad Request"
+WARNING:chatbot.whatsapp:Fallo al enviar el documento por WhatsApp (400): {"error":{"message":"(#131030) Recipient phone number not in allowed list","code":131030,"type":"OAuthException","error_data":{"messaging_product":"whatsapp","details":"Recipient phone number not in allowed list: Add recipient phone number to recipient list and try again."},"fbtrace_id":"AIWiwm_-A-T8iSyVGzPVLVC"}}
+INFO:     2a03:2880:21ff:4d:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 404 Not Found"
+WARNING:chatbot:Extractor de cotización falló en openrouter: Error code: 404 - {'error': {'message': 'This model is unavailable for free. The paid version is available now - use this slug instead: meta-llama/llama-3.3-70b-instruct', 'code': 404}, 'user_id': 'user_3Ii2Xn3QxJtvxY1sCeeBjMv5UVt'}
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 404 Not Found"
+WARNING:chatbot:Extractor de cotización falló en gemini: Error code: 404 - [{'error': {'code': 404, 'message': 'This model models/gemini-2.5-flash is no longer available to new users. Please update your code to use models/gemini-3.6-flash for the latest features and improvements. We recommend you to use the Interactions API.', 'status': 'NOT_FOUND'}}]
+INFO:chatbot:No se extrajo una cotización del mensaje
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:22ff:3:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:54:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:48:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:4b:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 404 Not Found"
+WARNING:chatbot:Extractor de cotización falló en openrouter: Error code: 404 - {'error': {'message': 'This model is unavailable for free. The paid version is available now - use this slug instead: meta-llama/llama-3.3-70b-instruct', 'code': 404}, 'user_id': 'user_3Ii2Xn3QxJtvxY1sCeeBjMv5UVt'}
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 404 Not Found"
+WARNING:chatbot:Extractor de cotización falló en gemini: Error code: 404 - [{'error': {'code': 404, 'message': 'This model models/gemini-2.5-flash is no longer available to new users. Please update your code to use models/gemini-3.6-flash for the latest features and improvements. We recommend you to use the Interactions API.', 'status': 'NOT_FOUND'}}]
+INFO:chatbot:No se extrajo una cotización del mensaje
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:58:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:70:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:4:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 404 Not Found"
+WARNING:chatbot:Extractor de cotización falló en openrouter: Error code: 404 - {'error': {'message': 'This model is unavailable for free. The paid version is available now - use this slug instead: meta-llama/llama-3.3-70b-instruct', 'code': 404}, 'user_id': 'user_3Ii2Xn3QxJtvxY1sCeeBjMv5UVt'}
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 404 Not Found"
+WARNING:chatbot:Extractor de cotización falló en gemini: Error code: 404 - [{'error': {'code': 404, 'message': 'This model models/gemini-2.5-flash is no longer available to new users. Please update your code to use models/gemini-3.6-flash for the latest features and improvements. We recommend you to use the Interactions API.', 'status': 'NOT_FOUND'}}]
+INFO:chatbot:No se extrajo una cotización del mensaje
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:45:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:12ff:4:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:72:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:4c:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 404 Not Found"
+WARNING:chatbot:Extractor de cotización falló en openrouter: Error code: 404 - {'error': {'message': 'This model is unavailable for free. The paid version is available now - use this slug instead: meta-llama/llama-3.3-70b-instruct', 'code': 404}, 'user_id': 'user_3Ii2Xn3QxJtvxY1sCeeBjMv5UVt'}
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 404 Not Found"
+WARNING:chatbot:Extractor de cotización falló en gemini: Error code: 404 - [{'error': {'code': 404, 'message': 'This model models/gemini-2.5-flash is no longer available to new users. Please update your code to use models/gemini-3.6-flash for the latest features and improvements. We recommend you to use the Interactions API.', 'status': 'NOT_FOUND'}}]
+INFO:chatbot:No se extrajo una cotización del mensaje
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:71:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:5:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:4b:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [16955]
+INFO:     Started server process [20496]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
+INFO:     127.0.0.1:34102 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34110 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41784 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/quotes "HTTP/1.1 201 Created"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8000/storage/COT-0003.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/media "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 400 Bad Request"
+WARNING:chatbot.whatsapp:Fallo al enviar el documento por WhatsApp (400): {"error":{"message":"(#131030) Recipient phone number not in allowed list","code":131030,"type":"OAuthException","error_data":{"messaging_product":"whatsapp","details":"Recipient phone number not in allowed list: Add recipient phone number to recipient list and try again."},"fbtrace_id":"A4qmDOGliW3lDJbR1aT8umj"}}
+INFO:     2a03:2880:22ff:53:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:openai._base_client:Retrying request in 0.430548 seconds
+INFO:openai._base_client:Retrying request in 0.926237 seconds
+WARNING:chatbot:Extractor de cotización falló en gemini: Request timed out.
+INFO:chatbot:No se extrajo una cotización de los providers
+INFO:chatbot:Reintento de extracción (mensaje con señales de cotización)
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:openai._base_client:Retrying request in 0.464523 seconds
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:No se extrajo una cotización de los providers
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:a:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:55:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:7d:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [20496]
+INFO:     Started server process [24218]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
+INFO:     127.0.0.1:59812 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59814 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56728 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/quotes "HTTP/1.1 201 Created"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8000/storage/COT-0004.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/media "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:37622 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 400 Bad Request"
+WARNING:chatbot.whatsapp:Fallo al enviar el documento por WhatsApp (400): {"error":{"message":"(#131030) Recipient phone number not in allowed list","code":131030,"type":"OAuthException","error_data":{"messaging_product":"whatsapp","details":"Recipient phone number not in allowed list: Add recipient phone number to recipient list and try again."},"fbtrace_id":"Acd0SwZUW1KMf8jG_Ojyfm3"}}
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:chatbot:Cotización pedida sin ítems determinables; se responde pendiente
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 400 Bad Request"
+WARNING:chatbot.whatsapp:Error al enviar por WhatsApp (400): {"error":{"message":"(#131030) Recipient phone number not in allowed list","code":131030,"type":"OAuthException","error_data":{"messaging_product":"whatsapp","details":"Recipient phone number not in allowed list: Add recipient phone number to recipient list and try again."},"fbtrace_id":"AWSRTFSEhEinFAYHc0JkXlF"}}
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [24218]
+INFO:     Started server process [25557]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
+INFO:     127.0.0.1:39876 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39882 - "GET /health HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:44:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:openai._base_client:Retrying request in 0.463028 seconds
+INFO:openai._base_client:Retrying request in 0.817014 seconds
+WARNING:chatbot:Extractor de cotización falló en gemini: Request timed out.
+INFO:chatbot:No se extrajo una cotización de los providers
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:3:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:42:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:5f:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:48:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/quotes "HTTP/1.1 201 Created"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8000/storage/COT-0005.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/media "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:42:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:4b:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:c:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con openrouter (meta-llama/llama-3.3-70b-instruct)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/quotes "HTTP/1.1 201 Created"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8000/storage/COT-0006.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/media "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:21ff:4:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:45:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:43:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/quotes "HTTP/1.1 201 Created"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8000/storage/COT-0007.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/media "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:21ff:72:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:12ff:48:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:56:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con openrouter (meta-llama/llama-3.3-70b-instruct)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/quotes "HTTP/1.1 201 Created"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8000/storage/COT-0008.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/media "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:15:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:1e:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:9:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/quotes "HTTP/1.1 201 Created"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8000/storage/COT-0009.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/media "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:22ff:51:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:50:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     104.30.167.164:0 - "HEAD / HTTP/1.1" 404 Not Found
+INFO:     104.30.167.164:0 - "HEAD / HTTP/1.1" 404 Not Found
+INFO:     2a03:2880:10ff:53:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:No se extrajo una cotización de los providers
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:12ff:46:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:43:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:4e:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:59:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:openai._base_client:Retrying request in 0.388211 seconds
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 503 Service Unavailable"
+INFO:openai._base_client:Retrying request in 0.788187 seconds
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:No se extrajo una cotización de los providers
+INFO:chatbot:Reintento de extracción (mensaje con señales de cotización)
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:openai._base_client:Retrying request in 0.479090 seconds
+INFO:openai._base_client:Retrying request in 0.917766 seconds
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:No se extrajo una cotización de los providers
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:46:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:4a:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:4:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:8:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:5f:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con openrouter (meta-llama/llama-3.3-70b-instruct)
+INFO:chatbot:Cotización solicitada sin ítems nuevos; se reenvía COT-0009.pdf
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/media "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:12ff:42:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:4d:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:12ff:3:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:b:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con openrouter (meta-llama/llama-3.3-70b-instruct)
+INFO:chatbot:Cotización solicitada sin ítems nuevos; se reenvía COT-0009.pdf
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/media "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:21ff:44:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:71:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:40:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:4d:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:openai._base_client:Retrying request in 0.414846 seconds
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:No se extrajo una cotización de los providers
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:50:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:71:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:7:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:74:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:6:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:openai._base_client:Retrying request in 0.490269 seconds
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:No se extrajo una cotización de los providers
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:21ff:44:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:12ff:71:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:44:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:2:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con openrouter (meta-llama/llama-3.3-70b-instruct)
+INFO:chatbot:Cotización solicitada sin ítems nuevos; se reenvía COT-0009.pdf
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/media "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:12ff:2:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:9:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:5:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:5f:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51880 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51884 - "GET /documents HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/onnx/tokenizer.json "HTTP/1.1 302 Found"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+INFO:httpx:HTTP Request: HEAD https://huggingface.co/intfloat/multilingual-e5-small/resolve/main/onnx/model_O4.onnx "HTTP/1.1 302 Found"
+/home/elvindev/ia-projects/chatbot-pymes/.venv/lib/python3.14/site-packages/chromadb/api/types.py:2839: UserWarning: Could not reconstruct embedding function multilingual-e5-small: 'multilingual-e5-small'. Setting to None.
+  result.float_list = cls._deserialize_float_list_value_type(
+INFO:     127.0.0.1:50076 - "POST /documents/upload HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43484 - "GET /documents HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43488 - "GET /health HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:     127.0.0.1:43496 - "POST /chat HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:58:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:No se extrajo una cotización de los providers
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:21ff:45:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:7:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:49:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:42:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/quotes "HTTP/1.1 201 Created"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8000/storage/COT-0010.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/media "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:47:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:3:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:1:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:46:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/quotes "HTTP/1.1 201 Created"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8000/storage/COT-0011.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/media "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:53:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:46:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:11:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:46:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:No se extrajo una cotización de los providers
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:5d:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:8:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:5a:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:4d:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:44:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:chatbot:Cotización pedida sin ítems ni PDF previo; se responde pendiente
+INFO:     2a03:2880:21ff:51:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:43:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:54:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:4f:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/quotes "HTTP/1.1 201 Created"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8000/storage/COT-0012.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/media "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:22ff:74:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:51:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:3:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:6:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/quotes "HTTP/1.1 201 Created"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8000/storage/COT-0013.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/media "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:4d:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:4c:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:4b:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:4f:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:chatbot:Cotización pedida sin ítems ni PDF previo; se responde pendiente
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:b:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:55:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:1:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:46:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request in 0.424560 seconds
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request in 0.828863 seconds
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 429 Too Many Requests"
+WARNING:chatbot:Extractor de cotización falló en gemini: Error code: 429 - [{'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.6-flash\nPlease retry in 45.606382038s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'model': 'gemini-3.6-flash', 'location': 'global'}, 'quotaValue': '20'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '45s'}]}}]
+INFO:chatbot:No se extrajo una cotización de los providers
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:21ff:9:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:4e:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:9:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:16:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request in 0.396165 seconds
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request in 0.803113 seconds
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 429 Too Many Requests"
+WARNING:chatbot:Extractor de cotización falló en gemini: Error code: 429 - [{'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.6-flash\nPlease retry in 5.124862357s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-3.6-flash'}, 'quotaValue': '20'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '5s'}]}}]
+INFO:chatbot:No se extrajo una cotización de los providers
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:50:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:4f:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:59:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:52:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:chatbot:Cotización solicitada sin ítems nuevos; se reenvía COT-0013.pdf
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/media "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:17:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:4f:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:9:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:40:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request in 0.465959 seconds
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request in 0.890832 seconds
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 429 Too Many Requests"
+WARNING:chatbot:Extractor de cotización falló en gemini: Error code: 429 - [{'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.6-flash\nPlease retry in 38.630469689s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-3.6-flash'}, 'quotaValue': '20'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '38s'}]}}]
+INFO:chatbot:No se extrajo una cotización de los providers
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:2ff:51:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:55:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:4f:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:12ff:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request in 0.379507 seconds
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request in 0.805118 seconds
+INFO:httpx2:HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/openai/chat/completions "HTTP/1.1 429 Too Many Requests"
+WARNING:chatbot:Extractor de cotización falló en gemini: Error code: 429 - [{'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 20, model: gemini-3.6-flash\nPlease retry in 55.255066742s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-3.6-flash'}, 'quotaValue': '20'}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '55s'}]}}]
+INFO:chatbot:No se extrajo una cotización de los providers
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Respondido por groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:22ff:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:48:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:22ff:7:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:10ff:5c:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:httpx2:HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:chatbot:Cotización extraída con groq (openai/gpt-oss-120b)
+INFO:httpx:HTTP Request: POST http://127.0.0.1:8000/quotes "HTTP/1.1 201 Created"
+INFO:httpx:HTTP Request: GET http://127.0.0.1:8000/storage/COT-0016.pdf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/media "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://graph.facebook.com/v25.0/1306970875840540/messages "HTTP/1.1 200 OK"
+INFO:     2a03:2880:10ff:11:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:2ff:50:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     2a03:2880:21ff:6:::0 - "POST /webhooks/whatsapp HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60518 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38916 - "GET /health HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [25557]

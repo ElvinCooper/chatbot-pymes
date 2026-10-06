@@ -1,0 +1,49 @@
+2026-10-06T01:15:03Z INF Thank you for trying Cloudflare Tunnel. Doing so, without a Cloudflare account, is a quick way to experiment and try it out. However, be aware that these account-less Tunnels have no uptime guarantee, are subject to the Cloudflare Online Services Terms of Use (https://www.cloudflare.com/website-terms/), and Cloudflare reserves the right to investigate your use of Tunnels for violations of such terms. If you intend to use Tunnels in production you should use a pre-created named tunnel by following: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps
+2026-10-06T01:15:03Z INF Requesting new quick Tunnel on trycloudflare.com...
+2026-10-06T01:15:09Z INF +--------------------------------------------------------------------------------------------+
+2026-10-06T01:15:09Z INF |  Your quick Tunnel has been created! Visit it at (it may take some time to be reachable):  |
+2026-10-06T01:15:09Z INF |  https://nokia-ordering-sticker-collectors.trycloudflare.com                               |
+2026-10-06T01:15:09Z INF +--------------------------------------------------------------------------------------------+
+2026-10-06T01:15:09Z INF Cannot determine default configuration path. No file [config.yml config.yaml] in [~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp /etc/cloudflared /usr/local/etc/cloudflared]
+2026-10-06T01:15:09Z INF Version 2026.8.3 (Checksum f29324fe934d1e100617484c78deef803c4dc2cd351d645bbde42e96b4fccc5e)
+2026-10-06T01:15:09Z INF GOOS: linux, GOVersion: go1.26.4, GoArch: amd64
+2026-10-06T01:15:09Z INF Settings: map[ha-connections:1 p:http2 protocol:http2 url:http://127.0.0.1:8002]
+2026-10-06T01:15:09Z INF Autoupdate frequency is set autoupdateFreq=86400000
+2026-10-06T01:15:09Z INF Generated Connector ID: e12f20bd-1357-4991-9125-af5dabb4e887
+2026-10-06T01:15:09Z INF Initial protocol http2
+2026-10-06T01:15:09Z INF ICMP proxy will use 192.168.0.10 as source for IPv4
+2026-10-06T01:15:09Z INF ICMP proxy will use fe80::2e0:4cff:fe0a:53ac in zone enx00e04c0a53ac as source for IPv6
+2026-10-06T01:15:10Z INF ICMP proxy will use 192.168.0.10 as source for IPv4
+2026-10-06T01:15:10Z INF ICMP proxy will use fe80::2e0:4cff:fe0a:53ac in zone enx00e04c0a53ac as source for IPv6
+2026-10-06T01:15:10Z INF Starting metrics server on 127.0.0.1:20241/metrics
+2026-10-06T01:15:10Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256] connIndex=0 event=0 ip=198.41.200.73
+2026-10-06T01:15:12Z INF Registered tunnel connection connIndex=0 connection=1b1b5359-c2e0-4ba0-8c25-e735ad0647c8 event=0 ip=198.41.200.73 location=tpa01 protocol=http2
+2026-10-06T01:15:18Z INF +--------------------------------------------------------------------------------------+
+2026-10-06T01:15:18Z INF |                               CONNECTIVITY PRE-CHECKS                                |
+2026-10-06T01:15:18Z INF +--------------------------------------------------------------------------------------+
+2026-10-06T01:15:18Z INF |  COMPONENT         TARGET                     STATUS  DETAILS                        |
+2026-10-06T01:15:18Z INF |  DNS Resolution    region1.v2.argotunnel.com  PASS    DNS Resolved successfully      |
+2026-10-06T01:15:18Z INF |  DNS Resolution    region2.v2.argotunnel.com  PASS    DNS Resolved successfully      |
+2026-10-06T01:15:18Z INF |  UDP Connectivity  region1.v2.argotunnel.com  PASS    QUIC connection successful     |
+2026-10-06T01:15:18Z INF |  UDP Connectivity  region2.v2.argotunnel.com  PASS    QUIC connection successful     |
+2026-10-06T01:15:18Z INF |  TCP Connectivity  region1.v2.argotunnel.com  PASS    HTTP/2 connection successful   |
+2026-10-06T01:15:18Z INF |  TCP Connectivity  region2.v2.argotunnel.com  PASS    HTTP/2 connection successful   |
+2026-10-06T01:15:18Z INF |  Cloudflare API    api.cloudflare.com:443     PASS    API is reachable               |
+2026-10-06T01:15:18Z INF |                                                                                      |
+2026-10-06T01:15:18Z INF |  SUMMARY: Environment is healthy. cloudflared will use 'http2' as primary protocol.  |
+2026-10-06T01:15:18Z INF +--------------------------------------------------------------------------------------+
+2026-10-06T01:15:18Z INF precheck component="DNS Resolution" details="DNS Resolved successfully" run_id=abe8abdc-220a-4574-a7f2-97b2619345a9 status=pass target=region1.v2.argotunnel.com
+2026-10-06T01:15:18Z INF precheck component="DNS Resolution" details="DNS Resolved successfully" run_id=abe8abdc-220a-4574-a7f2-97b2619345a9 status=pass target=region2.v2.argotunnel.com
+2026-10-06T01:15:18Z INF precheck component="UDP Connectivity" details="QUIC connection successful" run_id=abe8abdc-220a-4574-a7f2-97b2619345a9 status=pass target=region1.v2.argotunnel.com
+2026-10-06T01:15:18Z INF precheck component="UDP Connectivity" details="QUIC connection successful" run_id=abe8abdc-220a-4574-a7f2-97b2619345a9 status=pass target=region2.v2.argotunnel.com
+2026-10-06T01:15:18Z INF precheck component="TCP Connectivity" details="HTTP/2 connection successful" run_id=abe8abdc-220a-4574-a7f2-97b2619345a9 status=pass target=region1.v2.argotunnel.com
+2026-10-06T01:15:18Z INF precheck component="TCP Connectivity" details="HTTP/2 connection successful" run_id=abe8abdc-220a-4574-a7f2-97b2619345a9 status=pass target=region2.v2.argotunnel.com
+2026-10-06T01:15:18Z INF precheck component="Cloudflare API" details="API is reachable" run_id=abe8abdc-220a-4574-a7f2-97b2619345a9 status=pass target=api.cloudflare.com:443
+2026-10-06T01:15:18Z INF precheck complete hard_fail=false run_id=abe8abdc-220a-4574-a7f2-97b2619345a9 suggested_protocol=http2
+2026-10-06T05:14:16Z INF Lost connection with the edge connIndex=0
+2026-10-06T05:14:16Z ERR Serve tunnel error error="connection with edge closed" connIndex=0 event=0 ip=198.41.200.73
+2026-10-06T05:14:16Z INF Retrying connection in up to 1s connIndex=0 event=0 ip=198.41.200.73
+2026-10-06T05:14:16Z ERR failed to serve incoming request error="Error shutting down control stream: rpc: connection closed"
+2026-10-06T05:14:16Z ERR Connection terminated error="connection with edge closed" connIndex=0
+2026-10-06T05:14:24Z INF Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256] connIndex=0 event=0 ip=198.41.200.73
+2026-10-06T05:14:25Z INF Registered tunnel connection connIndex=0 connection=3a8ac8f8-ad75-433a-88d7-f27649d2f052 event=0 ip=198.41.200.73 location=mia04 protocol=http2
