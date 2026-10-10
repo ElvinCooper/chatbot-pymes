@@ -22,12 +22,17 @@ Notas de Meta:
 
 import hashlib
 import hmac
+import json
 import logging
 import os
 import re
 import time
+from dataclasses import dataclass
+from datetime import datetime, timezone
 
 import httpx
+
+import metrics
 
 logger = logging.getLogger("chatbot.whatsapp")
 
@@ -42,6 +47,62 @@ STALE_MESSAGE_SECONDS = 900
 
 UNSUPPORTED_MESSAGE_TYPES = ("audio", "button", "contacts", "document", "image",
                              "location", "reaction", "sticker", "video")
+
+
+@dataclass
+class InboundMessage:
+    """Un mensaje de texto entrante de WhatsApp con lo que mide la Fase 2.
+
+    Además del texto, conserva los metadatos necesarios para registrar el
+    evento `message_received` (wamid, remitente, tipo, timestamp de Meta y el
+    `phone_number_id` del número que recibió el mensaje).
+    """
+
+    wamid: str
+    wa_id: str
+    text: str
+    message_type: str = "text"
+    timestamp: int | None = None
+    phone_number_id: str | None = None
+
+
+@dataclass
+class MessageStatus:
+    """Estado de entrega de un mensaje saliente (Fase 3).
+
+    Meta envía los cambios de estado en `value.statuses[]` (sent, delivered,
+    read, failed). El bloque `pricing` viaja en el propio status y trae la
+    categoría de facturación (service/utility/marketing/authentication), si es
+    facturable y el tipo (regular/free_customer_service/...). Esos datos son la
+    base del costeo de WhatsApp.
+    """
+
+    wamid: str
+    status: str
+    timestamp: int | None = None
+    recipient_id: str | None = None
+    phone_number_id: str | None = None
+    pricing_category: str | None = None
+    pricing_billable: bool | None = None
+    pricing_type: str | None = None
+    country_code: str | None = None
+
+
+def _tenant_id() -> str:
+    """Tenant en uso. Misma convención que main.py (default "chatbot")."""
+    return os.getenv("TENANT_ID") or "chatbot"
+
+
+def _utc_iso(epoch_seconds: int | None) -> str:
+    """Convierte un timestamp epoch de Meta a ISO 8601 UTC (con fallback a ahora)."""
+    if epoch_seconds:
+        try:
+            return datetime.fromtimestamp(
+                epoch_seconds, tz=timezone.utc
+            ).isoformat(timespec="seconds")
+        except (OverflowError, OSError, ValueError):
+            pass
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
 def build_conversation_id(wa_id: str) -> str:
@@ -60,17 +121,22 @@ def verify_signature(raw_body: bytes, signature_header: str | None, app_secret: 
     return hmac.compare_digest(expected, provided)
 
 
-def parse_messages(update: dict) -> list[tuple[str, str, str]]:
+def parse_messages(update: dict) -> list[InboundMessage]:
     """Extrae los mensajes de texto entrantes.
 
     Los updates de Meta vienen anidados como
-    entry[].changes[].value.messages[]. Devuelve una lista de tuplas
-    (wamid, wa_id, texto). Ignora statuses y tipos de mensaje no soportados.
+    entry[].changes[].value.messages[]. Devuelve una lista de `InboundMessage`
+    (wamid, wa_id, texto y metadatos). Ignora statuses, ecos de envío propio y
+    tipos de mensaje no soportados.
     """
-    messages: list[tuple[str, str, str]] = []
+    messages: list[InboundMessage] = []
     for entry in update.get("entry", []):
         for change in entry.get("changes", []):
             value = change.get("value", {})
+            # El phone_number_id del número que recibió el mensaje vive en el
+            # metadata del payload; se captura para las métricas (el envío usa
+            # el WHATSAPP_PHONE_NUMBER_ID del archivo .env, no este valor).
+            phone_number_id = (value.get("metadata") or {}).get("phone_number_id")
             for message in value.get("messages", []):
                 wamid = message.get("id", "")
                 wa_id = message.get("from", "")
@@ -99,8 +165,107 @@ def parse_messages(update: dict) -> list[tuple[str, str, str]]:
                         msg_ts, wamid,
                     )
                     continue
-                messages.append((wamid, wa_id, text))
+                messages.append(InboundMessage(
+                    wamid=wamid,
+                    wa_id=wa_id,
+                    text=text,
+                    message_type=message.get("type") or "text",
+                    timestamp=msg_ts or None,
+                    phone_number_id=phone_number_id,
+                ))
     return messages
+
+
+def parse_statuses(update: dict) -> list[MessageStatus]:
+    """Extrae los cambios de estado de entrega (`value.statuses[]`).
+
+    Meta anida los statuses igual que los mensajes:
+    entry[].changes[].value.statuses[]. Cada status trae el `id` (wamid), el
+    estado (`sent`/`delivered`/`read`/`failed`), el timestamp y, cuando aplica,
+    el bloque `pricing` con la categoría de facturación. Se ignoran los statuses
+    sin wamid. No se aplica el filtro de antigüedad: los retries viejos son
+    idempotentes porque el registro es un UPSERT por wamid.
+    """
+    statuses: list[MessageStatus] = []
+    for entry in update.get("entry", []):
+        for change in entry.get("changes", []):
+            value = change.get("value", {})
+            phone_number_id = (value.get("metadata") or {}).get("phone_number_id")
+            for status in value.get("statuses", []) or []:
+                wamid = status.get("id", "")
+                if not wamid:
+                    continue
+                try:
+                    st_ts = int(status.get("timestamp") or 0)
+                except (TypeError, ValueError):
+                    st_ts = 0
+                pricing = status.get("pricing") or {}
+                billable = pricing.get("billable")
+                if not isinstance(billable, bool):
+                    billable = None
+                statuses.append(MessageStatus(
+                    wamid=wamid,
+                    status=status.get("status") or "",
+                    timestamp=st_ts or None,
+                    recipient_id=status.get("recipient_id"),
+                    phone_number_id=phone_number_id,
+                    pricing_category=pricing.get("category") or None,
+                    pricing_billable=billable,
+                    pricing_type=pricing.get("type") or None,
+                    country_code=pricing.get("country_code") or None,
+                ))
+    return statuses
+
+
+def record_message_status(status: MessageStatus) -> None:
+    """Registra el estado de entrega de un mensaje saliente (best-effort).
+
+    `delivered` se marca también para `read` (leer implica entregado). El
+    UPSERT por wamid hace el registro idempotente ante reintentos y estados
+    sucesivos del mismo mensaje.
+    """
+    delivered = status.status in ("delivered", "read")
+    failed = status.status == "failed"
+    metrics.upsert_message_status(
+        wamid=status.wamid,
+        tenant_id=_tenant_id(),
+        conversation_id=(
+            build_conversation_id(status.recipient_id)
+            if status.recipient_id else None
+        ),
+        contact_id=status.recipient_id,
+        phone_number_id=status.phone_number_id,
+        status=status.status,
+        delivered=delivered,
+        failed=failed,
+        pricing_category=status.pricing_category,
+        pricing_billable=status.pricing_billable,
+        pricing_type=status.pricing_type,
+        country_code=status.country_code,
+        event_time=_utc_iso(status.timestamp),
+    )
+
+
+def record_message_received(inbound: InboundMessage, payload_size: int | None = None) -> None:
+    """Registra un evento `message_received` de WhatsApp (best-effort).
+
+    Se llama desde el webhook SOLO para mensajes que pasaron el dedup (wamid
+    no visto) y los chequeos del parse (texto válido, no stale, no eco). Un
+    wamid duplicado nunca vuelve a generar el evento.
+    """
+    metrics.record_usage_event(
+        tenant_id=_tenant_id(),
+        channel=CHANNEL_NAME,
+        direction="inbound",
+        event_type="message_received",
+        conversation_id=build_conversation_id(inbound.wa_id),
+        event_time=_utc_iso(inbound.timestamp),
+        wamid=inbound.wamid,
+        contact_id=inbound.wa_id,
+        phone_number_id=inbound.phone_number_id,
+        payload_size=payload_size,
+        metadata={"message_type": inbound.message_type},
+    )
 
 
 def _format_for_whatsapp(text: str) -> str:
@@ -117,8 +282,48 @@ def _format_for_whatsapp(text: str) -> str:
     return text
 
 
+def _extract_wamid(resp: httpx.Response) -> str | None:
+    """Lee el wamid de la respuesta exitosa de la Graph API (messages[0].id).
+
+    Devuelve None si la respuesta no trae la lista `messages` o no se puede
+    parsear (JSON inválido). El wamid vive en messages[].id; el media_id de la
+    subida NO es el wamid, así que no se mezclan.
+    """
+    try:
+        data = resp.json()
+    except ValueError:
+        return None
+    messages = (data or {}).get("messages") or []
+    return messages[0].get("id") if messages else None
+
+
+def _record_sent_message(
+    wa_id: str,
+    wamid: str | None,
+    message_type: str,
+    payload: dict,
+) -> None:
+    """Registra un evento `message_sent` de WhatsApp (best-effort, Fase 2)."""
+    metrics.record_usage_event(
+        tenant_id=_tenant_id(),
+        channel=CHANNEL_NAME,
+        direction="outbound",
+        event_type="message_sent",
+        conversation_id=build_conversation_id(wa_id),
+        wamid=wamid,
+        contact_id=wa_id,
+        phone_number_id=os.getenv("WHATSAPP_PHONE_NUMBER_ID"),
+        payload_size=len(json.dumps(payload).encode("utf-8")),
+        metadata={"message_type": message_type},
+    )
+
+
 async def send_message(wa_id: str, text: str) -> None:
-    """Envía un mensaje de texto al usuario mediante la Graph API."""
+    """Envía un mensaje de texto al usuario mediante la Graph API.
+
+    Registra un evento `message_sent` (con el wamid que devuelve Meta) cuando
+    el envío es exitoso; ante un error de Meta no se registra nada.
+    """
     access_token = os.getenv("WHATSAPP_ACCESS_TOKEN")
     phone_number_id = os.getenv("WHATSAPP_PHONE_NUMBER_ID")
     if not access_token or not phone_number_id:
@@ -147,13 +352,23 @@ async def send_message(wa_id: str, text: str) -> None:
             logger.warning(
                 "Error al enviar por WhatsApp (%s): %s", resp.status_code, resp.text
             )
+            return
+
+        wamid = _extract_wamid(resp)
+        if not wamid:
+            logger.warning(
+                "Respuesta de WhatsApp sin wamid fijada: %s", resp.text
+            )
+        _record_sent_message(wa_id, wamid, "text", payload)
 
 
 async def send_document(wa_id: str, file_bytes: bytes, filename: str, caption: str = "") -> None:
     """Envía un archivo PDF como documento (tipo 'document') por WhatsApp.
 
     La Graph API exige dos pasos: subir el media (se obtiene un media_id) y
-    luego enviar un mensaje tipo 'document' referenciando ese id.
+    luego enviar un mensaje tipo 'document' referenciando ese id. Registra un
+    evento `message_sent` con el wamid de la respuesta del envío (no el
+    media_id de la subida).
     """
     access_token = os.getenv("WHATSAPP_ACCESS_TOKEN")
     phone_number_id = os.getenv("WHATSAPP_PHONE_NUMBER_ID")
@@ -199,3 +414,11 @@ async def send_document(wa_id: str, file_bytes: bytes, filename: str, caption: s
                 "Fallo al enviar el documento por WhatsApp (%s): %s",
                 resp.status_code, resp.text,
             )
+            return
+
+        wamid = _extract_wamid(resp)
+        if not wamid:
+            logger.warning(
+                "Respuesta de envío de documento sin wamid fijada: %s", resp.text
+            )
+        _record_sent_message(wa_id, wamid, "document", payload)

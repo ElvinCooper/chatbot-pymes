@@ -50,11 +50,58 @@ class MetricsTest(unittest.TestCase):
         cols = [r[1] for r in self._query("PRAGMA table_info(usage_events)")]
         for expected in (
             "id", "event_time", "tenant_id", "channel", "direction",
-            "event_type", "conversation_id", "provider", "model",
+            "event_type", "conversation_id", "wamid", "contact_id",
+            "phone_number_id", "payload_size", "provider", "model",
             "prompt_tokens", "completion_tokens", "total_tokens",
             "metadata", "created_at",
         ):
             self.assertIn(expected, cols)
+
+    def test_migracion_agrega_columnas_sin_perder_datos(self):
+        # Simula una BD de Fase 0 (sin las columnas de canal).
+        conn = sqlite3.connect(self._db_path)
+        conn.executescript(
+            """
+            CREATE TABLE usage_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_time TEXT NOT NULL,
+                tenant_id TEXT NOT NULL,
+                channel TEXT,
+                direction TEXT,
+                event_type TEXT NOT NULL,
+                conversation_id TEXT,
+                provider TEXT,
+                model TEXT,
+                prompt_tokens INTEGER,
+                completion_tokens INTEGER,
+                total_tokens INTEGER,
+                metadata TEXT,
+                created_at TEXT NOT NULL
+            );
+            """
+        )
+        conn.execute(
+            "INSERT INTO usage_events (event_time, tenant_id, event_type, created_at) "
+            "VALUES ('2024-01-01T00:00:00+00:00', 'chatbot', 'chat_reply', "
+            "'2024-01-01T00:00:00+00:00')"
+        )
+        conn.commit()
+        conn.close()
+
+        # La siguiente escritura migra y conserva la fila existente.
+        metrics.record_usage_event(
+            tenant_id="chatbot", event_type="message_sent", wamid="wamid.X"
+        )
+        cols = [r[1] for r in self._query("PRAGMA table_info(usage_events)")]
+        for expected in ("wamid", "contact_id", "phone_number_id", "payload_size"):
+            self.assertIn(expected, cols)
+        self.assertEqual(len(self._query("SELECT 1 FROM usage_events")), 2)
+        self.assertEqual(
+            self._query(
+                "SELECT wamid FROM usage_events WHERE event_type='message_sent'"
+            ),
+            [("wamid.X",)],
+        )
 
     def test_insert_y_persistencia(self):
         metrics.record_usage_event(

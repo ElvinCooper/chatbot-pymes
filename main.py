@@ -1109,13 +1109,23 @@ async def whatsapp_webhook(request: Request, background_tasks: BackgroundTasks) 
         raise HTTPException(status_code=400, detail="Body inválido")
 
     _prune_recent_wamids()
-    for wamid, wa_id, message in whatsapp_adapter.parse_messages(update):
-        if wamid in _recent_wamids:
-            logger.info("Update de WhatsApp duplicado ignorado (wamid %s)", wamid)
+    payload_size = len(raw_body)
+    for msg in whatsapp_adapter.parse_messages(update):
+        if msg.wamid in _recent_wamids:
+            logger.info("Update de WhatsApp duplicado ignorado (wamid %s)", msg.wamid)
             continue
-        _recent_wamids[wamid] = time.time()
+        _recent_wamids[msg.wamid] = time.time()
         _save_recent_wamids()
-        background_tasks.add_task(_handle_whatsapp_message, wamid, wa_id, message)
+        # Fase 2: solo los mensajes que pasan el dedup generan message_received.
+        whatsapp_adapter.record_message_received(msg, payload_size=payload_size)
+        background_tasks.add_task(
+            _handle_whatsapp_message, msg.wamid, msg.wa_id, msg.text
+        )
+
+    # Fase 3: estados de entrega (delivered/read/failed) con su `pricing`.
+    # UPSERT idempotente por wamid, así que los reintentos de Meta no duplican.
+    for status in whatsapp_adapter.parse_statuses(update):
+        whatsapp_adapter.record_message_status(status)
 
     return {"status": "ok"}
 
