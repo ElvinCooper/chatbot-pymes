@@ -79,8 +79,15 @@ fi
 
 # --- Carga de .env -----------------------------------------------------------
 
-if [[ -f .env ]]; then
-  set -a; source .env; set +a
+if [[ "${CHATBOT_DOTENV_LOADED:-}" != "1" ]]; then
+  if [[ -x .venv/bin/python ]]; then
+    ENV_PYTHON=.venv/bin/python
+  elif [[ -x .venv/Scripts/python.exe ]]; then
+    ENV_PYTHON=.venv/Scripts/python.exe
+  else
+    ENV_PYTHON=python3
+  fi
+  exec "$ENV_PYTHON" load_env.py "$BASH" "$0" "$@"
 fi
 
 [[ -n "${TELEGRAM_BOT_TOKEN:-}" ]] || {
@@ -97,13 +104,15 @@ if [[ -z "${TELEGRAM_WEBHOOK_SECRET:-}" ]]; then
     echo "$SECRET_VAR=$local_secret" >> .env
   fi
   echo "Generado $SECRET_VAR persistente en .env (revísalo si quieres)."
-  . ./.env
+  export "$SECRET_VAR=$local_secret"
 fi
 
 # --- Herramientas ------------------------------------------------------------
 
 if [[ -x .venv/bin/uvicorn ]]; then
   UVICORN=".venv/bin/uvicorn"
+elif [[ -x .venv/Scripts/uvicorn.exe ]]; then
+  UVICORN=".venv/Scripts/uvicorn.exe"
 elif command -v uvicorn >/dev/null 2>&1; then
   UVICORN="$(command -v uvicorn)"
 else
@@ -140,7 +149,7 @@ if curl -sf "http://127.0.0.1:$PORT/health" 2>/dev/null | grep -q '"providers_co
   echo "Uvicorn ya responde en el puerto $PORT (lo reutilizo)."
 else
   echo "Levantando uvicorn en el puerto $PORT..."
-  "$UVICORN" main:app --host 127.0.0.1 --port "$PORT" >"$LOGS_DIR/uvicorn.log" 2>&1 &
+BOT_CHANNEL=telegram "$UVICORN" main:public_app --host 127.0.0.1 --port "$PORT" --limit-concurrency 32 --no-access-log >"$LOGS_DIR/uvicorn.log" 2>&1 &
   echo $! > "$LOGS_DIR/${PID_PREFIX}uvicorn.pid"
   for _ in $(seq 1 30); do
     curl -sf "http://127.0.0.1:$PORT/health" >/dev/null 2>&1 && break

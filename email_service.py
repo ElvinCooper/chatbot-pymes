@@ -42,7 +42,7 @@ REQUEST_TIMEOUT = 30.0
 # Límites del email-service, por debajo de los de Resend. El servicio los
 # valida y responde 422; se replican aquí como documentación.
 MAX_ATTACHMENTS = 10
-MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024      # 10 MB por adjunto
+MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024  # 10 MB por adjunto
 MAX_TOTAL_ATTACHMENT_BYTES = 25 * 1024 * 1024  # 25 MB en total
 
 
@@ -69,6 +69,8 @@ def encode_attachment(filename: str, content: bytes, content_type: str) -> dict:
 
     El contenido viaja en memoria: no se escribe ningún fichero temporal.
     """
+    if len(content) > MAX_ATTACHMENT_BYTES:
+        raise ValueError("Adjunto demasiado grande")
     return {
         "filename": filename,
         "content_base64": base64.b64encode(content).decode("ascii"),
@@ -103,6 +105,21 @@ async def send_email(
         )
         return None
 
+    if not idempotency_key or len(idempotency_key) > 256:
+        logger.warning("Idempotency-Key obligatoria e inválida/ausente")
+        return None
+    if attachments:
+        try:
+            sizes = [len(base64.b64decode(a["content_base64"], validate=True)) for a in attachments]
+            if (
+                len(sizes) > MAX_ATTACHMENTS
+                or max(sizes) > MAX_ATTACHMENT_BYTES
+                or sum(sizes) > MAX_TOTAL_ATTACHMENT_BYTES
+            ):
+                raise ValueError
+        except (KeyError, TypeError, ValueError):
+            logger.warning("Adjuntos inválidos o demasiado grandes")
+            return None
     payload: dict = {
         "tenant_id": tenant_id,
         "to": [to] if isinstance(to, str) else list(to),
@@ -134,20 +151,23 @@ async def send_email(
                 f"{base_url.rstrip('/')}/api/v1/emails/send", json=payload, headers=headers
             )
     except httpx.HTTPError as exc:
-        logger.warning("Error de red al llamar al email-service: %s", exc)
+        logger.warning("Error de red al llamar al email-service: %s", type(exc).__name__)
         return None
 
     if resp.status_code != 200:
         logger.warning(
             "Error al enviar el correo en email-service (%s): %s",
-            resp.status_code, resp.text[:200],
+            resp.status_code,
+            "respuesta omitida",
         )
         return None
 
     try:
         data = resp.json()
     except ValueError:
-        logger.warning("Respuesta no JSON del email-service (%s): %s", resp.status_code, resp.text[:200])
+        logger.warning(
+            "Respuesta no JSON del email-service (%s): %s", resp.status_code, "respuesta omitida"
+        )
         return None
 
     return _parse_email_response(data)
@@ -159,17 +179,22 @@ def _parse_email_response(data: dict) -> EmailResult | None:
     El 200 ya implica envío aceptado; aun así se comprueba "success" porque el
     contrato de error usa la misma forma de envelope.
     """
-    if not data.get("success"):
+    if not isinstance(data, dict):
+        return None
+    if data.get("success") is not True:
         error = data.get("error") or {}
+        if not isinstance(error, dict):
+            error = {}
         logger.warning(
             "El email-service respondió success=false (%s): %s",
-            error.get("code", "sin código"), error.get("message", ""),
+            error.get("code", "sin código"),
+            "mensaje omitido",
         )
         return None
 
     email_id = data.get("email_id")
-    if not email_id:
-        logger.warning("Respuesta del email-service sin email_id: %s", data)
+    if not isinstance(email_id, str) or not email_id or len(email_id) > 200:
+        logger.warning("Respuesta del email-service sin email_id")
         return None
 
     return EmailResult(email_id=email_id, tenant_id=data.get("tenant_id", ""))
