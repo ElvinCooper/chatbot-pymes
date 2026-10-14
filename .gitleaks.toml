@@ -1,0 +1,6 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Dependencias y almacenamiento vectorial regenerable; no excluye logs"
+paths = ['''(^|/)\.venv/''', '''(^|/)chroma_db/''', '''(^|/)__pycache__/''']

@@ -1,0 +1,46 @@
+name: Seguridad y pruebas
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
+        with:
+          version: "0.9.18"
+          python-version: "3.13"
+          enable-cache: false
+      - run: uv venv --python 3.13
+      - run: uv pip sync requirements-dev.lock --require-hashes
+      - run: uv run --no-project python -m unittest discover -s tests -v
+      - run: uv run --no-project python -m ruff check .
+      - name: Validar sintaxis de scripts
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          for script in run_bot.sh run_whatsapp.sh run_messenger.sh; do
+            bash -n "$script"
+          done
+      - run: uv run --no-project python -m pip_audit --local --vulnerability-service osv --progress-spinner off
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - name: Verificar Gitleaks y escanear historial
+        shell: bash
+        run: |
+          curl --fail --location --silent --show-error https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz -o "$RUNNER_TEMP/gitleaks.tar.gz"
+          cd "$RUNNER_TEMP"
+          echo '551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tar.gz' | sha256sum --check
+          tar -xzf gitleaks.tar.gz gitleaks
+          cd "$GITHUB_WORKSPACE"
+          "$RUNNER_TEMP/gitleaks" git --redact=100 --no-banner
+          "$RUNNER_TEMP/gitleaks" dir --redact=100 --no-banner

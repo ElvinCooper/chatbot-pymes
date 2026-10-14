@@ -1,3 +1,5 @@
+> **Seguridad actualizada:** leer [SEGURIDAD.md](SEGURIDAD.md). Las rutas de chat y documentos ahora requieren Bearer; los túneles publican únicamente webhooks/health. Instalar con `uv pip sync requirements-dev.lock --require-hashes` y ejecutar la suite con Python 3.13. Ejemplos antiguos de curl sin autenticación deben añadir `Authorization: Bearer <clave>` y usar la API interna privada.
+
 # chatbot-pymes
 
 Chatbot/RAG como asistente virtual para pequeños y medianos negocios (pymes).
@@ -11,7 +13,7 @@ inventa datos.
 
 - Backend [FastAPI](https://fastapi.tiangolo.com/) (`main.py`).
 - El archivo(s) con los datos del negocio se sube por API, se trocea y se indexa
-  en una base vectorial local [ChromaDB](https://www.trychroma.com/) (`rag.py`).
+  en un índice SQLite local con similitud coseno (`rag.py` / `vector_store.py`).
 - Cada pregunta del cliente recupera los fragmentos más relevantes
   (5 por defecto) y se los pasa al modelo de lenguaje como contexto.
 - **Modelo de embeddings**: `intfloat/multilingual-e5-small` en ONNX
@@ -67,7 +69,7 @@ Hay un documento de ejemplo en `data/business_data.txt` (una panadería ficticia
 para probar. El contenido que indexes será lo único que el chatbot conozca.
 
 > Si reemplazas los datos del negocio, borra y vuelve a crear la colección:
-> `rm -rf chroma_db/` y vuelve a subir el documento.
+> Reindexar documentos originales por la API administrativa. No borrar bases automáticamente; consultar SEGURIDAD.md para migración y backup.
 
 ## API
 
@@ -191,8 +193,8 @@ guarda en `.env`. Abre tu bot en Telegram, pulsa *Start* y escribe.
 
 > La URL gratuita de `trycloudflare.com` cambia en cada reinicio del túnel;
 > vuelve a ejecutar `./run_bot.sh webhook` (o `start`) para re-registrarla.
-> La memoria de conversaciones es en memoria: un reinicio del servidor equivale
-> a una sesión nueva.
+> Las conversaciones se guardan en SQLite con TTL acotado; un reinicio conserva
+> las sesiones que todavía no han expirado.
 
 ## WhatsApp Business (Cloud API de Meta)
 
@@ -302,7 +304,7 @@ Listo: te responde dentro de la conversación de Messenger.
 
 ```
 main.py               # API FastAPI: chat, subida/gestión de documentos, health, webhooks
-rag.py                # Ingesta (troceado), indexado y recuperación en ChromaDB
+rag.py                # Ingesta (troceado), indexado y recuperación SQLite/coseno
 embeddings.py         # Embedding function multilingüe (E5-small en ONNX)
 telegram_adapter.py   # Helpers de la Bot API de Telegram (webhook, formato Markdown)
 whatsapp_adapter.py   # Helpers de la Cloud API de WhatsApp/Meta (firma, mensajes)
@@ -319,4 +321,4 @@ data/                 # Documentos del negocio (fuente de información)
 - Sin API key, `/chat` devuelve 503 hasta que configures al menos una.
 - La velocidad de indexado/búsqueda depende de tu CPU (los embeddings corren en
   local). En hardware modesto cada búsqueda tarda unos segundos.
-- `chroma_db/` es la base vectorial regenerable: está en `.gitignore`.
+- `rag.sqlite3` es el índice vectorial; `inbox.sqlite3` conserva trabajos y sesiones temporales. Ambos se excluyen de Git. No eliminar `chroma_db/` antiguo sin backup.
