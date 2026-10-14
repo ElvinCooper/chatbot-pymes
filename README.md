@@ -1,4 +1,4 @@
-> **Seguridad actualizada:** leer [SEGURIDAD.md](SEGURIDAD.md). Las rutas de chat y documentos ahora requieren Bearer; los túneles publican únicamente webhooks/health. Instalar con `uv pip sync requirements-dev.lock --require-hashes` y ejecutar la suite con Python 3.13. Ejemplos antiguos de curl sin autenticación deben añadir `Authorization: Bearer <clave>` y usar la API interna privada.
+> **Seguridad actualizada:** leer [docs/SEGURIDAD.md](docs/SEGURIDAD.md). Las rutas de chat y documentos ahora requieren Bearer; los túneles publican únicamente webhooks/health. Instalar con `uv pip sync requirements-dev.lock --require-hashes` y ejecutar la suite con Python 3.13. Ejemplos antiguos de curl sin autenticación deben añadir `Authorization: Bearer <clave>` y usar la API interna privada.
 
 # chatbot-pymes
 
@@ -11,13 +11,13 @@ inventa datos.
 
 ## Cómo funciona
 
-- Backend [FastAPI](https://fastapi.tiangolo.com/) (`main.py`).
+- Backend [FastAPI](https://fastapi.tiangolo.com/) (`app/main.py`).
 - El archivo(s) con los datos del negocio se sube por API, se trocea y se indexa
-  en un índice SQLite local con similitud coseno (`rag.py` / `vector_store.py`).
+  en un índice SQLite local con similitud coseno (`app/rag/indexing.py` / `app/persistence/vector_store.py`).
 - Cada pregunta del cliente recupera los fragmentos más relevantes
   (5 por defecto) y se los pasa al modelo de lenguaje como contexto.
 - **Modelo de embeddings**: `intfloat/multilingual-e5-small` en ONNX
-  (`embeddings.py`), con soporte para español. Se descarga una sola vez a
+  (`app/rag/embeddings.py`), con soporte para español. Se descarga una sola vez a
   `~/.cache/huggingface` (~226 MB) y corre 100% local, sin API keys.
 - **Modelo de lenguaje**: se intentan en orden los proveedores configurados
   (Groq → OpenRouter → Gemini) con *fallback* automático si uno falla o está
@@ -25,15 +25,14 @@ inventa datos.
 
 ## Requisitos
 
-- Python 3.12+ (el proyecto se desarrolló con 3.14)
+- Python 3.13
 - API key de al menos un proveedor (ver abajo)
 
 ## Instalación
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+uv venv --python 3.13
+uv pip sync requirements-dev.lock --require-hashes
 
 cp .env.example .env   # completa al menos una API key
 ```
@@ -49,7 +48,7 @@ Primera ejecución: al indexar o buscar, se descargará el modelo de embeddings
 | `OPENROUTER_API_KEY`    | OpenRouter (muchos modelos, incl. gratis)      | https://openrouter.ai/settings/keys    |
 | `GEMINI_API_KEY`        | Google Gemini                                  | https://aistudio.google.com/apikey     |
 | `TELEGRAM_BOT_TOKEN`    | Bot para hablar desde Telegram                 | @BotFather (`/newbot`)                 |
-| `TELEGRAM_WEBHOOK_SECRET`| Secreto para validar el webhook de Telegram   | Generar uno (o `run_bot.sh` lo crea)   |
+| `TELEGRAM_WEBHOOK_SECRET`| Secreto para validar el webhook de Telegram   | Generar uno (o `scripts/run_bot.sh` lo crea)   |
 
 Los proveedores sin key se ignoran automáticamente. Con una sola key el chat
 funciona; con varias, si el primero falla se pasa al siguiente.
@@ -58,18 +57,18 @@ funciona; con varias, si el primero falla se pasa al siguiente.
 
 ```bash
 # Inicia el servidor (el puerto 8000 lo usa el document-service)
-uvicorn main:app --reload --port 8001
+uv run --no-project uvicorn app.main:app --host 127.0.0.1 --reload --port 8005
 
 # Sube tu archivo (.txt o .pdf). Reemplaza el ejemplo por tus datos reales.
-curl -X POST http://127.0.0.1:8001/documents/upload \
+curl -X POST http://127.0.0.1:8005/documents/upload \
+  -H "Authorization: Bearer $ADMIN_API_KEY" \
   -F "file=@data/business_data.txt"
 ```
 
 Hay un documento de ejemplo en `data/business_data.txt` (una panadería ficticia)
 para probar. El contenido que indexes será lo único que el chatbot conozca.
 
-> Si reemplazas los datos del negocio, borra y vuelve a crear la colección:
-> Reindexar documentos originales por la API administrativa. No borrar bases automáticamente; consultar SEGURIDAD.md para migración y backup.
+> Si reemplazas los datos del negocio, reindexar documentos originales por la API administrativa. No borrar bases automáticamente; consultar docs/SEGURIDAD.md para migración y backup.
 
 ## API
 
@@ -80,7 +79,7 @@ para probar. El contenido que indexes será lo único que el chatbot conozca.
 | GET    | `/documents`                  | Lista los documentos indexados                 |
 | DELETE | `/documents/{source_name}`    | Elimina un documento del índice                |
 | POST   | `/documents/quote`            | Genera una cotización PDF vía document-service |
-| GET    | `/health`                     | Estado del servidor, providers y documentos    |
+| GET    | `/health`                     | Estado y número de proveedores configurados    |
 | POST   | `/webhooks/telegram`          | Webhook que recibe los mensajes de Telegram    |
 | GET    | `/webhooks/whatsapp`          | Verificación del webhook de WhatsApp (Meta)    |
 | POST   | `/webhooks/whatsapp`          | Webhook que recibe los mensajes de WhatsApp    |
@@ -88,10 +87,13 @@ para probar. El contenido que indexes será lo único que el chatbot conozca.
 Ejemplo de chat:
 
 ```bash
-curl -X POST http://127.0.0.1:8001/chat \
+curl -X POST http://127.0.0.1:8005/chat \
+  -H "Authorization: Bearer $CLIENT_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"message": "¿Cuánto cuesta el pan de masa madre?"}'
 ```
+
+Usa la clave de un cliente configurado en `API_CLIENT_KEYS` para chat y `ADMIN_API_KEY` para documentos. Los ejemplos Bash suponen esas claves exportadas como `CLIENT_API_KEY` y `ADMIN_API_KEY`; la aplicación lee `.env`, pero el shell no las exporta automáticamente.
 
 La respuesta incluye el `provider` y el `model` usados, y si se usó contexto RAG.
 
@@ -106,13 +108,13 @@ cada pregunta es independiente.
 `DOCUMENT_SERVICE_URL` e `INTERNAL_API_KEY` configurados):
 
 ```bash
-curl -X POST http://127.0.0.1:8001/documents/quote \
+curl -X POST http://127.0.0.1:8005/documents/quote \
+  -H "Authorization: Bearer $ADMIN_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "request_id": "req-001",
-    "tenant_id": "pymes",
     "customer": {"name": "Juan Pérez", "phone": "809-555-0101"},
-    "items": [{"description": "Consulta legal", "quantity": 1, "unit_price": 2500.0}],
+    "items": [{"description": "Pan francés", "quantity": 1, "unit_price": 0.0}],
     "currency": "DOP"
   }'
 ```
@@ -122,12 +124,12 @@ document-service no está disponible o rechaza la petición, responde `502`.
 
 ### Envío de correos (email-service)
 
-`email_service.py` es un cliente del microservicio `email-service`, que entrega
+`app/integrations/email.py` es un cliente del microservicio `email-service`, que entrega
 los correos con Resend. **Todavía no lo invoca ningún flujo del bot**: está
 escrito y verificado contra el servicio real, pero desconectado a propósito.
 
 ```python
-import email_service
+from app.integrations import email as email_service
 
 resultado = await email_service.send_email(
     tenant_id="cliente_demo",
@@ -179,27 +181,27 @@ Para hablarle al chatbot desde tu celular, sin dominio ni configuración manual:
 #    (o descárgalo como ./cloudflared)
 
 # Levanta uvicorn + un túnel HTTPS de Cloudflare y registra el webhook
-./run_bot.sh start
+./scripts/run_bot.sh start
 
 # Detener
-./run_bot.sh stop
+./scripts/run_bot.sh stop
 
 # Re-registrar el webhook si cambió la URL del túnel (por un reinicio)
-./run_bot.sh webhook
+./scripts/run_bot.sh webhook
 ```
 
-`run_bot.sh` genera `TELEGRAM_WEBHOOK_SECRET` automáticamente si no existe y lo
+`scripts/run_bot.sh` genera `TELEGRAM_WEBHOOK_SECRET` automáticamente si no existe y lo
 guarda en `.env`. Abre tu bot en Telegram, pulsa *Start* y escribe.
 
 > La URL gratuita de `trycloudflare.com` cambia en cada reinicio del túnel;
-> vuelve a ejecutar `./run_bot.sh webhook` (o `start`) para re-registrarla.
+> vuelve a ejecutar `./scripts/run_bot.sh webhook` (o `start`) para re-registrarla.
 > Las conversaciones se guardan en SQLite con TTL acotado; un reinicio conserva
 > las sesiones que todavía no han expirado.
 
 ## WhatsApp Business (Cloud API de Meta)
 
 Conecta el chatbot a tu número de WhatsApp del negocio usando la Cloud API de
-Meta. Como no tienes dominio aún, `run_whatsapp.sh` abre un túnel HTTPS de
+Meta. Como no tienes dominio aún, `scripts/run_whatsapp.sh` abre un túnel HTTPS de
 Cloudflare (misma idea que Telegram) y te imprime la URL para el panel.
 
 Requisitos en [developers.facebook.com](https://developers.facebook.com/):
@@ -218,7 +220,7 @@ Configuración:
 ```bash
 # 1. Completa las 4 variables WHATSAPP_* en .env
 # 2. Levanta servidor + túnel (puerto 8002, no choca con el del bot de Telegram en 8001)
-./run_whatsapp.sh start
+./scripts/run_whatsapp.sh start
 ```
 
 El script imprime la URL pública. Después, en el panel de Meta:
@@ -239,13 +241,13 @@ Listo: escribe al número del negocio desde tu teléfono y el chatbot responde.
 > token en el panel o crea uno permanente de system user.
 >
 > **URL del túnel**: la URL gratuita de `trycloudflare.com` cambia en cada
-> reinicio; si reinicias, vuelve a ejecutar `./run_whatsapp.sh start` y repite
+> reinicio; si reinicias, vuelve a ejecutar `./scripts/run_whatsapp.sh start` y repite
 > el paso 2 con la nueva URL.
 
 ## Facebook Messenger (Messenger Platform de Meta)
 
 Conecta el chatbot a la **Página de Facebook** del negocio para que te escriban
-por Messenger. Igual que Telegram y WhatsApp, `run_messenger.sh` abre un túnel
+por Messenger. Igual que Telegram y WhatsApp, `scripts/run_messenger.sh` abre un túnel
 HTTPS de Cloudflare y te imprime la URL para pegarla en el panel de Meta.
 
 El endpoint público es `GET/POST /webhooks/messenger` (puerto **8004**).
@@ -267,7 +269,7 @@ Configuración:
 ```bash
 # 1. Completa las 4 variables MESSENGER_* en .env
 # 2. Levanta servidor + túnel (puerto 8004; no choca con 8001 Telegram ni 8002 WhatsApp)
-./run_messenger.sh start
+./scripts/run_messenger.sh start
 ```
 
 El script imprime la URL pública. Después, en el panel de Meta:
@@ -297,24 +299,35 @@ Listo: te responde dentro de la conversación de Messenger.
 > **envía** como archivo vía `message_attachments` (límite 25 MB).
 >
 > **URL del túnel**: la URL gratuita de `trycloudflare.com` cambia en cada
-> reinicio; si reinicias, vuelve a ejecutar `./run_messenger.sh start` y repite
+> reinicio; si reinicias, vuelve a ejecutar `./scripts/run_messenger.sh start` y repite
 > el paso 2 con la nueva URL.
 
 ## Estructura
 
+```text
+app/
+  main.py                 # Fábrica de aplicaciones y ciclo de vida
+  api/                    # Rutas de chat, documentos, webhooks y health
+  core/                   # Configuración, seguridad y recursos compartidos
+  schemas/                # Contratos Pydantic de entrada/salida
+  services/               # Chat, proveedores LLM, cotizaciones, sesiones y costes
+  integrations/
+    channels/             # Telegram, WhatsApp, Messenger e Instagram
+    documents.py          # Cliente del servicio de PDFs
+    email.py              # Cliente del servicio de correos
+  rag/                    # Ingesta, embeddings y proceso aislado del parser PDF
+  persistence/            # SQLite: trabajos, sesiones, cuotas, métricas e índice
+  workers/                # Consumo de inbox y cierre por inactividad
+  cli/                    # Informe de costes ejecutable como módulo
+scripts/                  # Arranque por canal y lectura segura de dotenv
+docs/                     # Seguridad, planes y documentación técnica
+data/                     # Documentos y catálogo aprobados del negocio
+runtime/                  # Bases, logs y PID locales; excluidos de Git
+tests/                    # Pruebas por área, siguiendo los paquetes de app
+.github/workflows/        # CI, auditoría de dependencias y secretos
 ```
-main.py               # API FastAPI: chat, subida/gestión de documentos, health, webhooks
-rag.py                # Ingesta (troceado), indexado y recuperación SQLite/coseno
-embeddings.py         # Embedding function multilingüe (E5-small en ONNX)
-telegram_adapter.py   # Helpers de la Bot API de Telegram (webhook, formato Markdown)
-whatsapp_adapter.py   # Helpers de la Cloud API de WhatsApp/Meta (firma, mensajes)
-messenger_adapter.py  # Helpers de Messenger Platform (parse de entry[].messaging[],
-                      #   firma X-Hub-Signature-256, envío de texto y PDF)
-run_bot.sh            # Levanta uvicorn + túnel Cloudflare y registra el webhook de Telegram
-run_whatsapp.sh       # Levanta uvicorn + túnel Cloudflare (webhook de WhatsApp se pega en Meta)
-run_messenger.sh      # Ídem, con el webhook de Messenger en el puerto 8004
-data/                 # Documentos del negocio (fuente de información)
-```
+
+La dirección de dependencias es: rutas/CLI/workers → servicios → integraciones/persistencia. `core/config.py` centraliza las rutas desde la raíz del proyecto; `main.py` solo compone la aplicación. Los paquetes usan imports absolutos bajo `app`.
 
 ## Limitaciones conocidas
 
@@ -322,3 +335,14 @@ data/                 # Documentos del negocio (fuente de información)
 - La velocidad de indexado/búsqueda depende de tu CPU (los embeddings corren en
   local). En hardware modesto cada búsqueda tarda unos segundos.
 - `rag.sqlite3` es el índice vectorial; `inbox.sqlite3` conserva trabajos y sesiones temporales. Ambos se excluyen de Git. No eliminar `chroma_db/` antiguo sin backup.
+## Desarrollo y rutas locales
+
+Ejecutar desde la raíz del repositorio:
+
+```powershell
+.venv\Scripts\python.exe -m unittest discover -s tests -v
+.venv\Scripts\python.exe -m ruff check .
+.venv\Scripts\python.exe -m app.cli.cost_report --period 2026-10
+```
+
+En Linux usar `.venv/bin/python`. Los scripts Bash se ejecutan como `./scripts/run_bot.sh start` (o los otros canales). Ver [arquitectura y migración de rutas](docs/ESTRUCTURA.md).

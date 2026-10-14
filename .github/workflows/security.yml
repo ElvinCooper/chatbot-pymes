@@ -24,7 +24,7 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: |
-          for script in run_bot.sh run_whatsapp.sh run_messenger.sh; do
+          for script in scripts/run_bot.sh scripts/run_whatsapp.sh scripts/run_messenger.sh; do
             bash -n "$script"
           done
       - run: uv run --no-project python -m pip_audit --local --vulnerability-service osv --progress-spinner off

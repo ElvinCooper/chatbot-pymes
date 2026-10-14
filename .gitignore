@@ -28,3 +28,7 @@ inbox.sqlite3-shm
 rag.sqlite3
 rag.sqlite3-wal
 rag.sqlite3-shm
+
+# Estado de ejecución separado del código
+runtime/*
+!runtime/.gitkeep
