@@ -16,6 +16,8 @@ unittest, sin dependencias adicionales):
 """
 
 import json
+import hashlib
+import hmac
 import os
 import sqlite3
 import sys
@@ -32,6 +34,7 @@ from starlette.requests import Request
 
 import main
 import metrics
+import inbox
 import whatsapp_adapter
 
 
@@ -57,9 +60,7 @@ def _whatsapp_payload(
                                 "display_phone_number": "16505551234",
                                 "phone_number_id": phone_number_id,
                             },
-                            "contacts": [
-                                {"profile": {"name": "Cliente"}, "wa_id": contact}
-                            ],
+                            "contacts": [{"profile": {"name": "Cliente"}, "wa_id": contact}],
                             "messages": [
                                 {
                                     "from": contact,
@@ -88,16 +89,14 @@ class WhatsappMetricsTest(unittest.IsolatedAsyncioTestCase):
 
         # Aisla el estado en memoria del webhook (dedup) y evita tocar el
         # archivo runtime logs/recent_wamids.json.
-        main._recent_wamids.clear()
-        self._p_save_wamids = mock.patch.object(main, "_save_recent_wamids")
-        self._p_save_wamids.start()
-        self.addCleanup(self._p_save_wamids.stop)
+        self._inbox_path = inbox.DB_PATH
+        inbox.DB_PATH = os.path.join(self._tmpdir.name, "inbox.sqlite3")
 
         # Config de webhook y credenciales de Meta para los envíos.
         self._verify_token = main.WHATSAPP_VERIFY_TOKEN
         self._app_secret = main.WHATSAPP_APP_SECRET
         main.WHATSAPP_VERIFY_TOKEN = "verify-test"
-        main.WHATSAPP_APP_SECRET = ""
+        main.WHATSAPP_APP_SECRET = "secret-test"
         self._env = {
             "WHATSAPP_ACCESS_TOKEN": os.environ.get("WHATSAPP_ACCESS_TOKEN"),
             "WHATSAPP_PHONE_NUMBER_ID": os.environ.get("WHATSAPP_PHONE_NUMBER_ID"),
@@ -106,6 +105,7 @@ class WhatsappMetricsTest(unittest.IsolatedAsyncioTestCase):
         os.environ["WHATSAPP_PHONE_NUMBER_ID"] = "123456"
 
     def tearDown(self):
+        inbox.DB_PATH = self._inbox_path
         main.WHATSAPP_VERIFY_TOKEN = self._verify_token
         main.WHATSAPP_APP_SECRET = self._app_secret
         for key, value in self._env.items():
@@ -122,9 +122,9 @@ class WhatsappMetricsTest(unittest.IsolatedAsyncioTestCase):
         finally:
             conn.close()
 
-    @staticmethod
-    def _request(raw_body: bytes) -> Request:
+    def _request(self, raw_body: bytes) -> Request:
         """Construye un Request de Starlette para el endpoint del webhook."""
+
         async def receive():
             yield_bodies = {
                 "sent": False,
@@ -151,6 +151,15 @@ class WhatsappMetricsTest(unittest.IsolatedAsyncioTestCase):
             "headers": [
                 (b"content-type", b"application/json"),
                 (b"host", b"testserver"),
+                (
+                    b"x-hub-signature-256",
+                    (
+                        "sha256="
+                        + hmac.new(
+                            main.WHATSAPP_APP_SECRET.encode(), raw_body, hashlib.sha256
+                        ).hexdigest()
+                    ).encode(),
+                ),
             ],
             "client": ("testclient", 50000),
             "server": ("testserver", 80),
@@ -187,8 +196,17 @@ class WhatsappMetricsTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(len(rows), 1)
         (
-            event_type, direction, channel, wamid, contact_id, phone_number_id,
-            conversation_id, tenant_id, payload_size, event_time, metadata,
+            event_type,
+            direction,
+            channel,
+            wamid,
+            contact_id,
+            phone_number_id,
+            conversation_id,
+            tenant_id,
+            payload_size,
+            event_time,
+            metadata,
         ) = rows[0]
         self.assertEqual(event_type, "message_received")
         self.assertEqual(direction, "inbound")
@@ -215,14 +233,16 @@ class WhatsappMetricsTest(unittest.IsolatedAsyncioTestCase):
     # --- Envío de texto -----------------------------------------------------
 
     async def test_send_message_ok_registra_message_sent_con_wamid(self):
-        self._hit_meta(httpx.Response(
-            200,
-            json={
-                "messaging_product": "whatsapp",
-                "contacts": [{"wa_id": "5491100000000"}],
-                "messages": [{"id": "wamid.ABC123"}],
-            },
-        ))
+        self._hit_meta(
+            httpx.Response(
+                200,
+                json={
+                    "messaging_product": "whatsapp",
+                    "contacts": [{"wa_id": "5491100000000"}],
+                    "messages": [{"id": "wamid.ABC123"}],
+                },
+            )
+        )
         await whatsapp_adapter.send_message("5491100000000", "Hola")
 
         rows = self._query(
@@ -242,10 +262,12 @@ class WhatsappMetricsTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_send_message_sin_wamid_registra_null(self):
         # Meta respondió 200 pero sin messages[].id: se registra con wamid NULL.
-        self._hit_meta(httpx.Response(
-            200,
-            json={"messaging_product": "whatsapp", "contacts": [{"wa_id": "x"}]},
-        ))
+        self._hit_meta(
+            httpx.Response(
+                200,
+                json={"messaging_product": "whatsapp", "contacts": [{"wa_id": "x"}]},
+            )
+        )
         await whatsapp_adapter.send_message("5491100000000", "Hola")
 
         rows = self._query("SELECT wamid, event_type FROM usage_events")
@@ -260,9 +282,7 @@ class WhatsappMetricsTest(unittest.IsolatedAsyncioTestCase):
     # --- Tolerancia a fallos de SQLite --------------------------------------
 
     async def test_fallo_de_sqlite_no_rompe_recepcion_ni_envio(self):
-        with mock.patch(
-            "metrics.sqlite3.connect", side_effect=RuntimeError("disco lleno")
-        ):
+        with mock.patch("metrics._connect", side_effect=RuntimeError("disco lleno")):
             result = await self._fire_webhook(json.dumps(_whatsapp_payload()).encode())
             self.assertEqual(result, {"status": "ok"})
 
@@ -288,9 +308,7 @@ class WhatsappMetricsTest(unittest.IsolatedAsyncioTestCase):
                 "5491100000000", b"%PDF-1.4 fake", "cotizacion.pdf", "Cotización"
             )
 
-        rows = self._query(
-            "SELECT event_type, wamid, contact_id, metadata FROM usage_events"
-        )
+        rows = self._query("SELECT event_type, wamid, contact_id, metadata FROM usage_events")
         self.assertEqual(len(rows), 1)
         event_type, wamid, contact_id, metadata = rows[0]
         self.assertEqual(event_type, "message_sent")

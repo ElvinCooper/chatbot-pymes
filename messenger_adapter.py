@@ -67,10 +67,8 @@ def verify_signature(raw_body: bytes, signature_header: str | None, app_secret: 
         return False
     if not app_secret:
         return False
-    expected = hmac.new(
-        app_secret.encode(), raw_body, hashlib.sha256
-    ).hexdigest()
-    provided = signature_header[len("sha256="):]
+    expected = hmac.new(app_secret.encode(), raw_body, hashlib.sha256).hexdigest()
+    provided = signature_header[len("sha256=") :]
     return hmac.compare_digest(expected, provided)
 
 
@@ -129,9 +127,7 @@ def _parse_event(event: dict) -> tuple[str, str, str] | None:
 
     if not text:
         if message.get("attachments"):
-            logger.info(
-                "Mensaje de Messenger ignorado (adjunto sin texto, mid %s)", mid
-            )
+            logger.info("Mensaje de Messenger ignorado (adjunto sin texto, mid %s)", mid)
         else:
             logger.info("Mensaje de Messenger ignorado (sin texto, mid %s)", mid)
         return None
@@ -145,9 +141,7 @@ def _parse_event(event: dict) -> tuple[str, str, str] | None:
     except (TypeError, ValueError):
         event_ts = 0
     if event_ts and (time.time() - event_ts) > STALE_MESSAGE_SECONDS:
-        logger.info(
-            "Mensaje antiguo de Messenger ignorado (mid %s): retry de Meta", mid
-        )
+        logger.info("Mensaje antiguo de Messenger ignorado (mid %s): retry de Meta", mid)
         return None
 
     return (mid, psid, text)
@@ -213,12 +207,10 @@ async def _post_message(page_id: str, access_token: str, psid: str, message: dic
         "Content-Type": "application/json",
     }
     async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.post(
-            f"{GRAPH_BASE}/{page_id}/messages", json=payload, headers=headers
-        )
+        resp = await client.post(f"{GRAPH_BASE}/{page_id}/messages", json=payload, headers=headers)
         if resp.status_code != 200:
             logger.warning(
-                "Error al enviar por Messenger (%s): %s", resp.status_code, resp.text
+                "Error al enviar por Messenger (%s); respuesta omitida", resp.status_code
             )
             return False
     return True
@@ -246,7 +238,7 @@ def _credentials(action: str) -> tuple[str, str] | None:
     return access_token or "", page_id or ""
 
 
-async def send_message(psid: str, text: str) -> None:
+async def send_message(psid: str, text: str) -> bool:
     """Envía un mensaje de texto al usuario mediante la Graph API.
 
     Si el texto supera MAX_TEXT_CHARS se envía troceado en varios mensajes, ya
@@ -254,15 +246,17 @@ async def send_message(psid: str, text: str) -> None:
     """
     creds = _credentials("responder por Messenger")
     if creds is None:
-        return
+        return False
     access_token, page_id = creds
 
     body = _format_for_messenger(text)
     for chunk in _split_text(body):
-        await _post_message(page_id, access_token, psid, {"text": chunk})
+        if not await _post_message(page_id, access_token, psid, {"text": chunk}):
+            return False
+    return True
 
 
-async def send_document(psid: str, file_bytes: bytes, filename: str, caption: str = "") -> None:
+async def send_document(psid: str, file_bytes: bytes, filename: str, caption: str = "") -> bool:
     """Envía un PDF como archivo (tipo 'file') por Messenger.
 
     La Graph API exige dos pasos: subir el archivo (se obtiene un attachment_id)
@@ -274,19 +268,18 @@ async def send_document(psid: str, file_bytes: bytes, filename: str, caption: st
     """
     creds = _credentials("enviar el documento")
     if creds is None:
-        return
+        return False
     access_token, page_id = creds
 
     if caption:
-        await send_message(psid, caption)
+        if not await send_message(psid, caption):
+            return False
 
     api_url = f"{GRAPH_BASE}/{page_id}"
     headers = {"Authorization": f"Bearer {access_token}"}
     # El campo `message` del upload es un JSON serializado dentro del multipart.
     form = {
-        "message": json.dumps(
-            {"attachment": {"type": "file", "payload": {"is_reusable": True}}}
-        )
+        "message": json.dumps({"attachment": {"type": "file", "payload": {"is_reusable": True}}})
     }
     files = {"filedata": (filename, file_bytes, "application/pdf")}
 
@@ -296,15 +289,15 @@ async def send_document(psid: str, file_bytes: bytes, filename: str, caption: st
         )
         if up.status_code != 200:
             logger.warning(
-                "Fallo al subir el archivo a Messenger (%s): %s", up.status_code, up.text
+                "Fallo al subir el archivo a Messenger (%s); respuesta omitida", up.status_code
             )
-            return
-        attachment_id = (up.json() or {}).get("id")
+            return False
+        attachment_id = (up.json() or {}).get("attachment_id")
         if not attachment_id:
             logger.warning(
-                "Respuesta de message_attachments de Messenger sin id: %s", up.text
+                "Respuesta de message_attachments de Messenger sin id: respuesta omitida"
             )
-            return
+            return False
 
         message = {
             "attachment": {
@@ -323,6 +316,8 @@ async def send_document(psid: str, file_bytes: bytes, filename: str, caption: st
         )
         if resp.status_code != 200:
             logger.warning(
-                "Fallo al enviar el documento por Messenger (%s): %s",
-                resp.status_code, resp.text,
+                "Fallo al enviar el documento por Messenger (%s); respuesta omitida",
+                resp.status_code,
             )
+            return False
+    return True

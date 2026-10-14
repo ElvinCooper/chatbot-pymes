@@ -49,40 +49,45 @@ def get_chat_id(update: dict) -> int | None:
     return chat.get("id")
 
 
-async def send_message(chat_id: int, text: str) -> None:
+async def send_message(chat_id: int, text: str) -> bool:
     """Envía un mensaje al chat de Telegram mediante la Bot API."""
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
     if not bot_token:
         logger.warning("No se configuró TELEGRAM_BOT_TOKEN; no se puede responder.")
-        return
+        return False
     url = f"{TELEGRAM_API}/bot{bot_token}/sendMessage"
     formatted = _format_for_telegram(text)
     async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.post(url, json={
-            "chat_id": chat_id,
-            "text": formatted,
-            "parse_mode": "Markdown",
-        })
+        resp = await client.post(
+            url,
+            json={
+                "chat_id": chat_id,
+                "text": formatted[:4096],
+                "parse_mode": "Markdown",
+            },
+        )
         if resp.status_code == 200:
-            return
-        logger.warning("Markdown falló (%s), reenvío sin formato", resp.status_code)
-        resp = await client.post(url, json={"chat_id": chat_id, "text": text})
-        resp.raise_for_status()
+            return True
+        if resp.status_code != 400:
+            return False
+        logger.warning("Formato de Telegram rechazado; reenvío sin formato")
+        resp = await client.post(url, json={"chat_id": chat_id, "text": text[:4096]})
+        return resp.status_code == 200
 
 
 def _format_for_telegram(text: str) -> str:
     """Convierte Markdown estándar del LLM al formato Telegram Markdown."""
-    text = re.sub(r'\*\*(.+?)\*\*', r'*\1*', text)
-    text = re.sub(r'^(\s*)- ', r'\1• ', text, flags=re.MULTILINE)
+    text = re.sub(r"\*\*(.+?)\*\*", r"*\1*", text)
+    text = re.sub(r"^(\s*)- ", r"\1• ", text, flags=re.MULTILINE)
     return text
 
 
-async def send_document(chat_id: int, file_bytes: bytes, filename: str, caption: str = "") -> None:
+async def send_document(chat_id: int, file_bytes: bytes, filename: str, caption: str = "") -> bool:
     """Envía un archivo PDF como documento a un chat de Telegram (sendDocument)."""
     bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
     if not bot_token:
         logger.warning("No se configuró TELEGRAM_BOT_TOKEN; no se puede enviar el documento.")
-        return
+        return False
     url = f"{TELEGRAM_API}/bot{bot_token}/sendDocument"
     data: dict = {"chat_id": chat_id}
     if caption:
@@ -93,6 +98,8 @@ async def send_document(chat_id: int, file_bytes: bytes, filename: str, caption:
         resp = await client.post(url, data=data, files=files)
         if resp.status_code != 200:
             logger.warning(
-                "Fallo al enviar el documento por Telegram (%s): %s",
-                resp.status_code, resp.text,
+                "Fallo al enviar el documento por Telegram (%s); respuesta omitida",
+                resp.status_code,
             )
+
+    return resp.status_code == 200

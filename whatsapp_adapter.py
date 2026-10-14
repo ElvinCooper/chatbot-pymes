@@ -45,8 +45,17 @@ MAX_BODY_CHARS = 4096
 # Meta de mensajes ya respondidos (o muy viejos) tras caídas del bot.
 STALE_MESSAGE_SECONDS = 900
 
-UNSUPPORTED_MESSAGE_TYPES = ("audio", "button", "contacts", "document", "image",
-                             "location", "reaction", "sticker", "video")
+UNSUPPORTED_MESSAGE_TYPES = (
+    "audio",
+    "button",
+    "contacts",
+    "document",
+    "image",
+    "location",
+    "reaction",
+    "sticker",
+    "video",
+)
 
 
 @dataclass
@@ -97,9 +106,9 @@ def _utc_iso(epoch_seconds: int | None) -> str:
     """Convierte un timestamp epoch de Meta a ISO 8601 UTC (con fallback a ahora)."""
     if epoch_seconds:
         try:
-            return datetime.fromtimestamp(
-                epoch_seconds, tz=timezone.utc
-            ).isoformat(timespec="seconds")
+            return datetime.fromtimestamp(epoch_seconds, tz=timezone.utc).isoformat(
+                timespec="seconds"
+            )
         except (OverflowError, OSError, ValueError):
             pass
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -114,10 +123,8 @@ def verify_signature(raw_body: bytes, signature_header: str | None, app_secret: 
     """Valida la firma X-Hub-Signature-256 de Meta (HMAC-SHA256 del body crudo)."""
     if not signature_header or not signature_header.startswith("sha256="):
         return False
-    expected = hmac.new(
-        app_secret.encode(), raw_body, hashlib.sha256
-    ).hexdigest()
-    provided = signature_header[len("sha256="):]
+    expected = hmac.new(app_secret.encode(), raw_body, hashlib.sha256).hexdigest()
+    provided = signature_header[len("sha256=") :]
     return hmac.compare_digest(expected, provided)
 
 
@@ -149,7 +156,8 @@ def parse_messages(update: dict) -> list[InboundMessage]:
                 if message.get("type") != "text":
                     logger.info(
                         "Mensaje de WhatsApp ignorado (tipo '%s', wamid %s)",
-                        message.get("type"), wamid,
+                        message.get("type"),
+                        wamid,
                     )
                     continue
                 text = (message.get("text") or {}).get("body", "").strip()
@@ -162,17 +170,20 @@ def parse_messages(update: dict) -> list[InboundMessage]:
                 if msg_ts and (time.time() - msg_ts) > STALE_MESSAGE_SECONDS:
                     logger.info(
                         "Mensaje antiguo ignorado (timestamp %s, wamid %s): retry de Meta",
-                        msg_ts, wamid,
+                        msg_ts,
+                        wamid,
                     )
                     continue
-                messages.append(InboundMessage(
-                    wamid=wamid,
-                    wa_id=wa_id,
-                    text=text,
-                    message_type=message.get("type") or "text",
-                    timestamp=msg_ts or None,
-                    phone_number_id=phone_number_id,
-                ))
+                messages.append(
+                    InboundMessage(
+                        wamid=wamid,
+                        wa_id=wa_id,
+                        text=text,
+                        message_type=message.get("type") or "text",
+                        timestamp=msg_ts or None,
+                        phone_number_id=phone_number_id,
+                    )
+                )
     return messages
 
 
@@ -203,17 +214,19 @@ def parse_statuses(update: dict) -> list[MessageStatus]:
                 billable = pricing.get("billable")
                 if not isinstance(billable, bool):
                     billable = None
-                statuses.append(MessageStatus(
-                    wamid=wamid,
-                    status=status.get("status") or "",
-                    timestamp=st_ts or None,
-                    recipient_id=status.get("recipient_id"),
-                    phone_number_id=phone_number_id,
-                    pricing_category=pricing.get("category") or None,
-                    pricing_billable=billable,
-                    pricing_type=pricing.get("type") or None,
-                    country_code=pricing.get("country_code") or None,
-                ))
+                statuses.append(
+                    MessageStatus(
+                        wamid=wamid,
+                        status=status.get("status") or "",
+                        timestamp=st_ts or None,
+                        recipient_id=status.get("recipient_id"),
+                        phone_number_id=phone_number_id,
+                        pricing_category=pricing.get("category") or None,
+                        pricing_billable=billable,
+                        pricing_type=pricing.get("type") or None,
+                        country_code=pricing.get("country_code") or None,
+                    )
+                )
     return statuses
 
 
@@ -230,8 +243,7 @@ def record_message_status(status: MessageStatus) -> None:
         wamid=status.wamid,
         tenant_id=_tenant_id(),
         conversation_id=(
-            build_conversation_id(status.recipient_id)
-            if status.recipient_id else None
+            build_conversation_id(status.recipient_id) if status.recipient_id else None
         ),
         contact_id=status.recipient_id,
         phone_number_id=status.phone_number_id,
@@ -318,7 +330,7 @@ def _record_sent_message(
     )
 
 
-async def send_message(wa_id: str, text: str) -> None:
+async def send_message(wa_id: str, text: str) -> bool:
     """Envía un mensaje de texto al usuario mediante la Graph API.
 
     Registra un evento `message_sent` (con el wamid que devuelve Meta) cuando
@@ -330,7 +342,7 @@ async def send_message(wa_id: str, text: str) -> None:
         logger.warning(
             "Faltan WHATSAPP_ACCESS_TOKEN/WHATSAPP_PHONE_NUMBER_ID; no se puede responder."
         )
-        return
+        return False
 
     body = _format_for_whatsapp(text)[:MAX_BODY_CHARS]
     url = f"{GRAPH_BASE}/{phone_number_id}/messages"
@@ -349,20 +361,17 @@ async def send_message(wa_id: str, text: str) -> None:
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(url, json=payload, headers=headers)
         if resp.status_code != 200:
-            logger.warning(
-                "Error al enviar por WhatsApp (%s): %s", resp.status_code, resp.text
-            )
-            return
+            logger.warning("Error al enviar por WhatsApp (%s); respuesta omitida", resp.status_code)
+            return False
 
         wamid = _extract_wamid(resp)
         if not wamid:
-            logger.warning(
-                "Respuesta de WhatsApp sin wamid fijada: %s", resp.text
-            )
+            logger.warning("Respuesta de WhatsApp sin wamid fijada: respuesta omitida")
         _record_sent_message(wa_id, wamid, "text", payload)
+    return True
 
 
-async def send_document(wa_id: str, file_bytes: bytes, filename: str, caption: str = "") -> None:
+async def send_document(wa_id: str, file_bytes: bytes, filename: str, caption: str = "") -> bool:
     """Envía un archivo PDF como documento (tipo 'document') por WhatsApp.
 
     La Graph API exige dos pasos: subir el media (se obtiene un media_id) y
@@ -376,7 +385,7 @@ async def send_document(wa_id: str, file_bytes: bytes, filename: str, caption: s
         logger.warning(
             "Faltan WHATSAPP_ACCESS_TOKEN/WHATSAPP_PHONE_NUMBER_ID; no se puede enviar el documento."
         )
-        return
+        return False
 
     api_url = f"{GRAPH_BASE}/{phone_number_id}"
     headers = {"Authorization": f"Bearer {access_token}"}
@@ -390,13 +399,13 @@ async def send_document(wa_id: str, file_bytes: bytes, filename: str, caption: s
         up = await client.post(f"{api_url}/media", headers=headers, files=upload)
         if up.status_code != 200:
             logger.warning(
-                "Fallo al subir el media a WhatsApp (%s): %s", up.status_code, up.text
+                "Fallo al subir el media a WhatsApp (%s); respuesta omitida", up.status_code
             )
-            return
+            return False
         media_id = (up.json() or {}).get("id")
         if not media_id:
-            logger.warning("Respuesta de media de WhatsApp sin id: %s", up.text)
-            return
+            logger.warning("Respuesta de media de WhatsApp sin id: respuesta omitida")
+            return False
 
         document: dict = {"id": media_id, "filename": filename}
         if caption:
@@ -411,14 +420,13 @@ async def send_document(wa_id: str, file_bytes: bytes, filename: str, caption: s
         resp = await client.post(f"{api_url}/messages", headers=headers, json=payload)
         if resp.status_code != 200:
             logger.warning(
-                "Fallo al enviar el documento por WhatsApp (%s): %s",
-                resp.status_code, resp.text,
+                "Fallo al enviar el documento por WhatsApp (%s); respuesta omitida",
+                resp.status_code,
             )
-            return
+            return False
 
         wamid = _extract_wamid(resp)
         if not wamid:
-            logger.warning(
-                "Respuesta de envío de documento sin wamid fijada: %s", resp.text
-            )
+            logger.warning("Respuesta de envío de documento sin wamid fijada: respuesta omitida")
         _record_sent_message(wa_id, wamid, "document", payload)
+    return True
