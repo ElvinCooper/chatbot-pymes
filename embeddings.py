@@ -1,5 +1,5 @@
 """
-Embedding function multilingüe para ChromaDB basada en ONNX Runtime.
+Embeddings multilingües E5 para el índice SQLite, basados en ONNX Runtime.
 
 Usa "intfloat/multilingual-e5-small" (226 MB en ONNX optimizado). E5 es un
 modelo pensado para *retrieval* multilingüe (50+ idiomas, incluido español) y
@@ -9,7 +9,7 @@ Detalle importante: E5 necesita prefijos distintos según el rol del texto
 (instrucción oficial de los autores):
     - Documentos a indexar  -> "passage: <texto>"
     - Preguntas de consulta -> "query: <texto>"
-Chroma llama a `__call__` al indexar y a `embed_query` al buscar, así que el
+El índice llama a `__call__` al indexar y a `embed_query` al buscar, así que el
 prefijo correcto se aplica en cada caso.
 
 El modelo se descarga una sola vez a ~/.cache/huggingface y se ejecuta de
@@ -18,14 +18,17 @@ forma local, sin API keys ni servicios externos.
 
 import importlib
 from functools import cached_property
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional, Literal, cast
 
 import numpy as np
 import numpy.typing as npt
 
-from chromadb.api.types import Documents, Embeddings, EmbeddingFunction, Space
+Documents = list[str]
+Embeddings = list[npt.NDArray[np.float32]]
+Space = Literal["cosine", "l2", "ip"]
 
 MODEL_NAME = "intfloat/multilingual-e5-small"
+MODEL_REVISION = "614241f622f53c4eeff9890bdc4f31cfecc418b3"
 ONNX_FILE = "onnx/model_O4.onnx"
 MAX_SEQ_LENGTH = 256
 QUERY_PREFIX = "query: "
@@ -33,23 +36,21 @@ PASSAGE_PREFIX = "passage: "
 MODEL_TAG = "multilingual-e5-small"
 
 
-class MultilingualE5(EmbeddingFunction[Documents]):
-    """EmbeddingFunction de ChromaDB con un E5 multilingüe en ONNX."""
+class MultilingualE5:
+    """Embeddings E5 multilingües locales en ONNX."""
 
     def __init__(self, preferred_providers: Optional[List[str]] = None) -> None:
         try:
             self._ort = importlib.import_module("onnxruntime")
         except ImportError:
             raise ValueError(
-                "El paquete onnxruntime no está instalado. Instálalo con "
-                "`pip install onnxruntime`"
+                "El paquete onnxruntime no está instalado. Instálalo con `pip install onnxruntime`"
             )
         try:
             self._tokenizer_cls = importlib.import_module("tokenizers").Tokenizer
         except ImportError:
             raise ValueError(
-                "El paquete tokenizers no está instalado. Instálalo con "
-                "`pip install tokenizers`"
+                "El paquete tokenizers no está instalado. Instálalo con `pip install tokenizers`"
             )
         self._preferred_providers = preferred_providers
 
@@ -59,7 +60,9 @@ class MultilingualE5(EmbeddingFunction[Documents]):
     def tokenizer(self) -> Any:
         from huggingface_hub import hf_hub_download
 
-        path = hf_hub_download(repo_id=MODEL_NAME, filename="onnx/tokenizer.json")
+        path = hf_hub_download(
+            repo_id=MODEL_NAME, filename="onnx/tokenizer.json", revision=MODEL_REVISION
+        )
         tokenizer = self._tokenizer_cls.from_file(path)
         tokenizer.enable_truncation(max_length=MAX_SEQ_LENGTH)
         tokenizer.enable_padding(pad_id=1, pad_token="<pad>", length=MAX_SEQ_LENGTH)
@@ -69,7 +72,7 @@ class MultilingualE5(EmbeddingFunction[Documents]):
     def model(self) -> Any:
         from huggingface_hub import hf_hub_download
 
-        path = hf_hub_download(repo_id=MODEL_NAME, filename=ONNX_FILE)
+        path = hf_hub_download(repo_id=MODEL_NAME, filename=ONNX_FILE, revision=MODEL_REVISION)
 
         so = self._ort.SessionOptions()
         so.log_severity_level = 3
@@ -93,9 +96,7 @@ class MultilingualE5(EmbeddingFunction[Documents]):
         norm[norm == 0] = 1e-12
         return cast(npt.NDArray[np.float32], v / norm[:, np.newaxis])
 
-    def _forward(
-        self, documents: List[str], batch_size: int = 32
-    ) -> npt.NDArray[np.float32]:
+    def _forward(self, documents: List[str], batch_size: int = 32) -> npt.NDArray[np.float32]:
         all_embeddings: List[npt.NDArray[np.float32]] = []
         for i in range(0, len(documents), batch_size):
             batch = documents[i : i + batch_size]
@@ -103,14 +104,10 @@ class MultilingualE5(EmbeddingFunction[Documents]):
 
             for doc_tokens in encoded:
                 if len(doc_tokens.ids) > MAX_SEQ_LENGTH:
-                    raise ValueError(
-                        f"Documento supera el límite de {MAX_SEQ_LENGTH} tokens"
-                    )
+                    raise ValueError(f"Documento supera el límite de {MAX_SEQ_LENGTH} tokens")
 
             input_ids = np.array([e.ids for e in encoded], dtype=np.int64)
-            attention_mask = np.array(
-                [e.attention_mask for e in encoded], dtype=np.int64
-            )
+            attention_mask = np.array([e.attention_mask for e in encoded], dtype=np.int64)
             token_type_ids = np.array(
                 [np.zeros(len(e.ids), dtype=np.int64) for e in encoded],
                 dtype=np.int64,
@@ -141,21 +138,23 @@ class MultilingualE5(EmbeddingFunction[Documents]):
         # Al indexar, los documentos se etiquetan como pasajes.
         return cast(
             Embeddings,
-            [np.array(emb, dtype=np.float32) for emb in self._forward(
-                [f"{PASSAGE_PREFIX}{doc}" for doc in input]
-            )],
+            [
+                np.array(emb, dtype=np.float32)
+                for emb in self._forward([f"{PASSAGE_PREFIX}{doc}" for doc in input])
+            ],
         )
 
     def embed_query(self, input: Documents) -> Embeddings:
         # Al buscar, las preguntas llevan el prefijo de consulta.
         return cast(
             Embeddings,
-            [np.array(emb, dtype=np.float32) for emb in self._forward(
-                [f"{QUERY_PREFIX}{doc}" for doc in input]
-            )],
+            [
+                np.array(emb, dtype=np.float32)
+                for emb in self._forward([f"{QUERY_PREFIX}{doc}" for doc in input])
+            ],
         )
 
-    # --- Configuración de ChromaDB ----------------------------------------
+    # --- Configuración del modelo ----------------------------------------
 
     @staticmethod
     def name() -> str:
@@ -171,7 +170,7 @@ class MultilingualE5(EmbeddingFunction[Documents]):
         return MAX_SEQ_LENGTH
 
     @staticmethod
-    def build_from_config(config: Dict[str, Any]) -> "EmbeddingFunction[Documents]":
+    def build_from_config(config: Dict[str, Any]) -> "MultilingualE5":
         preferred_providers = config.get("preferred_providers")
         return MultilingualE5(preferred_providers=preferred_providers)
 

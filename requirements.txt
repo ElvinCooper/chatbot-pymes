@@ -4,8 +4,9 @@ openai
 httpx
 python-dotenv
 python-multipart
-chromadb
 pypdf
 huggingface-hub
 onnxruntime
 tokenizers
+pydantic
+numpy

@@ -19,3 +19,12 @@ logs/
 .DS_Store
 # Archivo huérfano con secretos (accidente); NUNCA commitear
 .enves
+inbox.sqlite3
+inbox.sqlite3-wal
+inbox.sqlite3-shm
+.env.*
+!.env.example
+.ruff_cache/
+rag.sqlite3
+rag.sqlite3-wal
+rag.sqlite3-shm
