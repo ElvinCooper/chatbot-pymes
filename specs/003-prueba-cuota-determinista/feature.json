@@ -1,0 +1,12 @@
+{
+  "id": "003-prueba-cuota-determinista",
+  "revision": 1,
+  "state": "implemented",
+  "authorization": {
+    "revision": 1,
+    "by": "Usuario del proyecto",
+    "reference": "Conversación actual: «El push se hizo, pero fallo el tests de windows en workflow» con log adjunto de test_chat_message_limit_and_rate_limit (200 != 429). Corrección de mantenimiento del fallo reportado, comunicada antes de implementar.",
+    "scope": "Diagnosticar y estabilizar tests de cuota por ventana fija, agregar regresión del cambio de ventana y validar suite. Sin cambiar el límite ni la lógica de producción, ni realizar push."
+  },
+  "acceptance": null
+}

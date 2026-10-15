@@ -66,12 +66,28 @@ class InboxTest(unittest.TestCase):
                 jobs.enqueue("telegram", "1", "telegram:123", {})
 
     def test_shared_quota_and_session_expiry(self):
-        quotas.reserve("client", 2)
-        quotas.reserve("client", 2)
-        with self.assertRaises(RuntimeError):
+        with mock.patch.object(quotas, "time") as quota_clock:
+            quota_clock.time.return_value = 1200.0
             quotas.reserve("client", 2)
+            quotas.reserve("client", 2)
+            with self.assertRaises(RuntimeError):
+                quotas.reserve("client", 2)
         session_store.save_session("api:1", {"history": ["dato"]}, ttl=-1)
         self.assertIsNone(session_store.load_session("api:1"))
+
+    def test_quota_remains_exhausted_until_next_fixed_window(self):
+        with mock.patch.object(quotas, "time") as quota_clock:
+            quota_clock.time.return_value = 1200.0
+            for _ in range(20):
+                quotas.reserve("client", 20)
+            quota_clock.time.return_value = 1259.999
+            with self.assertRaises(RuntimeError):
+                quotas.reserve("client", 20)
+            quota_clock.time.return_value = 1260.0
+            for _ in range(20):
+                quotas.reserve("client", 20)
+            with self.assertRaises(RuntimeError):
+                quotas.reserve("client", 20)
 
     def test_session_lease_serializes_independent_consumers(self):
         token = session_store.acquire_session("api:1")

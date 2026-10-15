@@ -16,7 +16,7 @@ import app.rag.indexing as rag
 from app import main
 from app.core import config, security
 from app.integrations.channels import telegram
-from app.persistence import database, metrics
+from app.persistence import database, metrics, quotas
 from app.services import catalog, llm, quotes
 
 
@@ -103,9 +103,12 @@ class SecurityTest(unittest.TestCase):
                 llm,
                 "try_provider",
                 new=mock.AsyncMock(return_value=llm.LLMResult("ok", "mock", "mock")),
-            ),
+            ) as provider,
             mock.patch.object(metrics, "record_usage_event"),
+            mock.patch.object(quotas, "time") as quota_clock,
         ):
+            # Una sola ventana fija; no alterar time.time global ni el loop de asyncio.
+            quota_clock.time.return_value = 1200.0
             for _ in range(20):
                 self.assertEqual(
                     self.client.post(
@@ -113,12 +116,12 @@ class SecurityTest(unittest.TestCase):
                     ).status_code,
                     200,
                 )
-            self.assertEqual(
-                self.client.post(
-                    "/chat", headers=self.headers("b"), json={"message": "hola"}
-                ).status_code,
-                429,
+            response = self.client.post(
+                "/chat", headers=self.headers("b"), json={"message": "hola"}
             )
+            self.assertEqual(response.status_code, 429)
+            self.assertEqual(response.headers["Retry-After"], "60")
+            self.assertEqual(provider.await_count, 20)
 
     def test_missing_and_bad_webhook_secrets_rejected(self):
         with mock.patch.object(config, "TELEGRAM_WEBHOOK_SECRET", ""):
