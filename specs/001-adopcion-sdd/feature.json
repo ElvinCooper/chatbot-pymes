@@ -1,0 +1,12 @@
+{
+  "id": "001-adopcion-sdd",
+  "revision": 1,
+  "state": "implemented",
+  "authorization": {
+    "revision": 1,
+    "by": "Usuario del proyecto",
+    "reference": "Conversación actual de Codex, mensaje del usuario del 2026-10-14: «Ahora por ultimo me gustaria prepara el proyecto para un flujo SDD Spec Driven Development, con la estructura recomendada. Esto para futuros cabios, nuevos feactures etc para asi tener el control sobre la IA al momento de implentar y probar.»",
+    "scope": "Preparar el flujo SDD local solicitado: estructura, plantillas, reglas para agentes, creación/verificación de artefactos y validación. No incluye nuevas funciones del chatbot, push ni despliegue."
+  },
+  "acceptance": null
+}

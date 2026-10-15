@@ -346,3 +346,12 @@ Ejecutar desde la raíz del repositorio:
 ```
 
 En Linux usar `.venv/bin/python`. Los scripts Bash se ejecutan como `./scripts/run_bot.sh start` (o los otros canales). Ver [arquitectura y migración de rutas](docs/ESTRUCTURA.md).
+
+## Cambios futuros con SDD
+
+Preparar especificación, plan, tareas y criterios de aceptación antes de implementar. El flujo y ejemplos están en [docs/SDD.md](docs/SDD.md); las plantillas en `.specify/templates/` y los cambios en `specs/`.
+
+```bash
+uv run --no-project python scripts/sdd.py new 001-mi-feature --title "Mi nueva funcionalidad"
+uv run --no-project python scripts/sdd.py check
+```

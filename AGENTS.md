@@ -1,5 +1,15 @@
 # AGENTS.md
 
+## Flujo SDD para cambios futuros
+
+Leer `.specify/memory/constitution.md`, `docs/SDD.md`, `specs/baseline.md` y la spec activa antes de cambiar comportamiento. Mantener `specs/NNN-feature/{feature.json,spec.md,plan.md,tasks.md,validation.md}`. Las ideas/planes históricos no autorizan nuevas features.
+
+Preparar documentos concretos de alcance, exclusiones, criterios y plan antes de pedir autorización de implementación. No implementar una nueva idea sin autorización humana del alcance/revisión; si ya existe autorización explícita en la conversación, registrarla y continuar sin preguntar de nuevo. La IA no inventa autorizaciones, aceptación o resultados. `approved` permite el alcance descrito en `authorization.scope`; respetar límites de tareas.
+
+Ejecutar `python scripts/sdd.py check --feature NNN-feature --ready` antes de implementar. Tareas enlazadas a FR/NFR/AC; completar evidencia en validation.md. Ante ampliación material, actualizar revisión/spec/plan/tareas y pedir autorización solo del cambio adicional. Los detalles rutinarios dentro del plan autorizado se resuelven autónomamente. El estado verified es técnico; accepted requiere decisión humana auténtica. Para bugs urgentes ya autorizados, registrar una spec breve sin solicitar autorización redundante. Cambios solo editoriales permiten revisión proporcional sin nueva carpeta.
+
+El checker y CI validan estructura y referencias, no consentimiento humano ni corrección semántica. Respetar decisiones del usuario y reglas de seguridad existentes. No declarar terminado sin las verificaciones pertinentes o sin comunicar las que faltan.
+
 ## Quick start
 
 Python 3.13. Dependencias reproducibles en `requirements.lock` / `requirements-dev.lock` (hashes). Leer `docs/SEGURIDAD.md` antes de cambiar rutas, precios o procesamiento.

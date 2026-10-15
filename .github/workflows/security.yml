@@ -18,6 +18,8 @@ jobs:
           enable-cache: false
       - run: uv venv --python 3.13
       - run: uv pip sync requirements-dev.lock --require-hashes
+      - name: Verificar artefactos SDD
+        run: uv run --no-project python scripts/sdd.py check
       - run: uv run --no-project python -m unittest discover -s tests -v
       - run: uv run --no-project python -m ruff check .
       - name: Validar sintaxis de scripts

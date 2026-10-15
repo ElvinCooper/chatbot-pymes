@@ -54,3 +54,7 @@ La reorganización no traslada bases existentes. Una variable explícita de ruta
 Para trasladar datos después: detener todas las instancias y escritores, respaldar las bases con sus archivos WAL/SHM si existen, trasladar con un procedimiento de backup SQLite y actualizar las rutas de todas las instancias. Verificar jobs/sesiones, eventos y fuentes antes de cambiar tráfico. Conservar el respaldo para rollback. Los logs/PID nuevos de scripts se guardan en `runtime/logs`; detener procesos arrancados con scripts anteriores antes de usar los nuevos.
 
 `runtime/` queda excluido de Git salvo `.gitkeep`. Documentos en `data/` no se publican automáticamente; revisar su contenido antes de versionarlos. Se mantiene el alcance de un solo negocio con TENANT_ID configurable.
+
+## Especificaciones de cambios
+
+`.specify/` contiene principios y plantillas; `specs/` conserva requisitos, planes, tareas y evidencias de cada cambio. Ver [SDD.md](SDD.md). `scripts/sdd.py` crea y verifica estos artefactos sin dependencias adicionales.
