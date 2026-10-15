@@ -1,0 +1,12 @@
+{
+  "id": "002-pruebas-rutas-windows",
+  "revision": 1,
+  "state": "implemented",
+  "authorization": {
+    "revision": 1,
+    "by": "Usuario del proyecto",
+    "reference": "Conversación actual, 2026-10-14: usuario reporta dos tests fallidos con JEFFRY~1 frente a jeffry wood y pregunta por unittest/pytest. Alcance de mantenimiento derivado del reporte, comunicado antes de corregir.",
+    "scope": "Corregir las aserciones de rutas equivalentes de Windows, agregar regresión de alias 8.3 y ejecutar los tests. Explicar unittest/pytest, sin migrar framework ni cambiar runtime."
+  },
+  "acceptance": null
+}

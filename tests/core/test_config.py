@@ -54,7 +54,7 @@ class PathsTest(unittest.TestCase):
                 with mock.patch.dict(os.environ, {"INBOX_DB_PATH": "custom/inbox.sqlite3"}):
                     self.assertEqual(
                         config.runtime_path("INBOX_DB_PATH", "inbox.sqlite3"),
-                        root / "custom/inbox.sqlite3",
+                        (root / "custom/inbox.sqlite3").resolve(),
                     )
 
     def test_fresh_process_imports_api_and_cli_from_other_directory_without_creating_databases(
@@ -82,7 +82,10 @@ class PathsTest(unittest.TestCase):
                 check=True,
                 timeout=30,
             )
-            self.assertEqual(json.loads(result.stdout), str(temp / "runtime/inbox.sqlite3"))
+            self.assertEqual(
+                Path(json.loads(result.stdout)).resolve(),
+                (temp / "runtime/inbox.sqlite3").resolve(),
+            )
             result = subprocess.run(
                 [
                     sys.executable,
@@ -103,3 +106,32 @@ class PathsTest(unittest.TestCase):
             self.assertIn("sin datos", result.stdout)
             self.assertFalse((temp / "runtime").exists())
             self.assertFalse((temp / "absent.sqlite3").exists())
+
+    @unittest.skipUnless(os.name == "nt", "Alias 8.3 específicos de Windows")
+    def test_explicit_database_path_resolves_windows_short_directory_alias(self):
+        import ctypes
+        from ctypes import wintypes
+
+        get_short_path = ctypes.WinDLL("kernel32", use_last_error=True).GetShortPathNameW
+        get_short_path.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
+        get_short_path.restype = wintypes.DWORD
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder).resolve()
+            size = get_short_path(str(root), None, 0)
+            if not size:
+                raise ctypes.WinError(ctypes.get_last_error())
+            buffer = ctypes.create_unicode_buffer(size)
+            if not get_short_path(str(root), buffer, size):
+                raise ctypes.WinError(ctypes.get_last_error())
+            short_root = Path(buffer.value)
+            if short_root == root:
+                self.skipTest("El sistema no proporciona un alias 8.3 distinto")
+            self.assertTrue(short_root.samefile(root))
+            with (
+                mock.patch.object(config, "PROJECT_ROOT", short_root),
+                mock.patch.dict(os.environ, {"INBOX_DB_PATH": "custom/inbox.sqlite3"}),
+            ):
+                actual = config.runtime_path("INBOX_DB_PATH", "inbox.sqlite3")
+                self.assertEqual(actual, root / "custom/inbox.sqlite3")
+                self.assertNotEqual(actual, root / "other/inbox.sqlite3")
+                self.assertFalse(actual.exists())
